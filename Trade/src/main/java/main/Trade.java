@@ -1,20 +1,16 @@
 package main;
 
-
 import org.bukkit.plugin.java.JavaPlugin;
 
-import command.TradeCommandExecutor;
-
+import command.CommandManager;
 
 public class Trade extends JavaPlugin{
-
-
 
 	@Override
 	public void onEnable() {
 		// TODO Auto-generated method stub
 		
-		this.getCommand("addsaf").setExecutor(new TradeCommandExecutor(this));
+		this.getCommand("KillPlayer").setExecutor(new CommandManager(this));
 		
 		getLogger().info("Trade onEnable");
 		

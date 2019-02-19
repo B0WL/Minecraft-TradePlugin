@@ -1,3 +1,8 @@
 name: Trade
-main: Trade.Trade
-version: 0.0.1-SNAPSHOT
+main: main.Trade
+version: 0.0.1-SANPSHOT
+author: B0WL
+commands:
+  Trade:
+    description: trade
+    usage: /Trade

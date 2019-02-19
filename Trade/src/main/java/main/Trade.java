@@ -18,7 +18,7 @@ public class Trade extends JavaPlugin {
 		try {
 			//getServer().getPluginManager().registerEvents(new ItemListener(), this);
 			getServer().getPluginManager().registerEvents(new InventoryListener(), this);
-		} catch (Exception e) {
+		} catch (Exception e) { 
 			getLogger().info("Item Listen Failed");
 		}
 		

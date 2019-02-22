@@ -1,79 +1,121 @@
 package listener;
 
 import org.bukkit.ChatColor;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
 
 import intenrnal.MenuInventory;
+import intenrnal.MenuInventoryHolder;
+import main.Trade;
 
 public class InventoryListener implements Listener {
-	MenuInventory menuInventory = new MenuInventory();
-	
-	
-	
+	private MenuInventory menuInventory;
+
+	public InventoryListener() {
+		menuInventory = Trade.menuInventory;
+	}
+
 	@EventHandler
 	public void onPlayerClickInventory(InventoryClickEvent e) {
+		if (e.getInventory().getHolder() != null && e.getInventory().getHolder() instanceof MenuInventoryHolder) {
 
-		if (e.getInventory().getTitle().equals("Auction")) {
-			if (e.getCurrentItem().getItemMeta() != null)
-				if (e.getCurrentItem().getItemMeta().getDisplayName() != null) {
-					String buttonName = e.getCurrentItem().getItemMeta().getDisplayName();
+			e.setCancelled(true);
+			ItemStack clickedItem = e.getCurrentItem();
+			
+			if (clickedItem.getItemMeta() != null) {
+				String title = e.getInventory().getTitle();
+				String clickedItemName = clickedItem.getItemMeta().getDisplayName();
+				Player player = (Player)e.getWhoClicked();
+				
+				
+				
 
-					if (buttonName.equals(ChatColor.RED + "Exit")) {
-						e.getWhoClicked().closeInventory();
+				if (title.equals("Auction")) {
+					if (clickedItemName.equals(ChatColor.RED + "Exit")) {
+						player.closeInventory();
+					}else
+						
+					if (clickedItemName.equals(ChatColor.YELLOW + "Item Sell")) {
+						menuInventory.onAuctionSell(player, null,0);
 					}
-					if (buttonName.equals(ChatColor.YELLOW + "Item Sell")) {
-						menuInventory.onAuctionSell((Player)e.getWhoClicked());
-					}
-					e.setCancelled(true);
-				}
-		}
-		
-		
-		
-		if (e.getInventory().getTitle().equals("Auction : Sell")) {
-			if (e.getCurrentItem().getItemMeta() != null)
-				if (e.getCurrentItem().getItemMeta().getDisplayName() != null) {
-					String buttonName = e.getCurrentItem().getItemMeta().getDisplayName();
-
-
-					if (buttonName.equals(ChatColor.YELLOW+"Item Select")) {
-						menuInventory.onItemSelect((Player)e.getWhoClicked());
+				}//////////////////////Main
+				
+				if (title.equals("Auction : Sell")) {
+					if(e.getClickedInventory() == player.getOpenInventory().getTopInventory()) {
+						if (clickedItemName.equals(ChatColor.GRAY + "Back")) {
+							menuInventory.onAuctionMain(player);
+						}else
+						
+						if (clickedItemName.equals(ChatColor.RED + "Exit")) {
+							player.closeInventory();
+						}else
+						
+						if (e.getRawSlot() == 19) {
+							menuInventory.onAuctionPrice(player
+									,Integer.parseInt(
+									player.getOpenInventory().getTopInventory()
+									.getItem(19).getItemMeta().getDisplayName())
+									,player.getOpenInventory().getTopInventory()
+									.getItem(10)
+									);
+						}
 					}
 					
-					
-					if (buttonName.equals(ChatColor.GRAY + "Back")) {
-						menuInventory.onAuctionMain((Player)e.getWhoClicked());
+					else {// 버튼이 아닌경우, 즉 아이템
+						menuInventory.onAuctionSell(player, clickedItem,
+								Integer.parseInt(
+								player.getOpenInventory().getTopInventory()
+								.getItem(19).getItemMeta().getDisplayName())
+								);
 					}
-					if (buttonName.equals(ChatColor.RED + "Exit")) {
-						e.getWhoClicked().closeInventory();
-					}					
+				}//////////////////////Sell
+				
+				if(title.contains("Price")) {					
+					if(e.getClickedInventory() == player.getOpenInventory().getTopInventory()) {
+						if(!clickedItemName.equals(ChatColor.GREEN+"Confirm")) {//확인버튼이 아니면 파싱
+							String priceString = player.getOpenInventory().getTopInventory().getTitle().split(" ")[2];
+							String buttonParsedString[] = clickedItemName.split(" ");
+							
+							String updownString = buttonParsedString[0];
+							String buttonPriceString = buttonParsedString[1];
 
-					e.setCancelled(true);
-				}
-		}
-		
-		if (e.getInventory().getTitle().equals("Auction : Select")) {
-			if (e.getCurrentItem().getItemMeta() != null)
-				if (e.getCurrentItem().getItemMeta().getDisplayName() != null) {
-					String buttonName = e.getCurrentItem().getItemMeta().getDisplayName();
+							player.sendMessage(priceString);
+							player.sendMessage(updownString);
+							player.sendMessage(buttonPriceString);
 
-
-					if (buttonName.equals(ChatColor.GREEN+"Confirm")) {
-						menuInventory.onAuctionSell((Player)e.getWhoClicked());
+							int price = Integer.parseInt(priceString);
+							
+							if(updownString.contains("UP")) {
+								 price += Integer.parseInt(buttonPriceString);
+								menuInventory.onAuctionPrice(player								
+										,price
+										,player.getOpenInventory().getTopInventory()
+										.getItem(13)
+										);
+							}
+							else {
+								price -= Integer.parseInt(buttonPriceString);
+								if(price < 0)
+									price =0;
+								menuInventory.onAuctionPrice(player								
+										,price
+										,player.getOpenInventory().getTopInventory()
+										.getItem(13)
+										);
+							}
+							
+						}
 					}
-					if (buttonName.equals(ChatColor.RED + "Cancel")) {
-						e.getWhoClicked().closeInventory();
-					}					
+				}//////////////////////Price
+			}
 
-					e.setCancelled(true);
-				}
 		}
+
 	}
-	
-	
-	
 
 }

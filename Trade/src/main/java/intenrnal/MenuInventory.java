@@ -9,91 +9,72 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+
 public class MenuInventory {	
-	
+
 	public void onAuctionMain(Player player) {
-    	Inventory inventory = Bukkit.createInventory(null,54,"Auction");
+    	Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(),54,"Auction");
 
-    	ItemStack buyButton = new ItemStack(Material.DIAMOND_BLOCK);
-    	ItemStack sellButton = new ItemStack(Material.GOLD_BLOCK);
-    	ItemStack listButton = new ItemStack(Material.BOOK);
-    	ItemStack exitButton = new ItemStack(Material.TNT);
-    	
-    	ItemMeta meta = buyButton.getItemMeta();
-    	meta.setDisplayName(ChatColor.GREEN+"Item Buy");
-    	buyButton.setItemMeta(meta);
-
-    	meta.setDisplayName(ChatColor.YELLOW+"Item Sell");
-    	sellButton.setItemMeta(meta);
-
-    	meta.setDisplayName(ChatColor.BLUE+"Trade List");
-    	listButton.setItemMeta(meta);
-    	
-    	meta.setDisplayName(ChatColor.RED+"Exit");
-    	exitButton.setItemMeta(meta);
-
-    	inventory.setItem(20, buyButton);
-    	inventory.setItem(22, sellButton);
-    	inventory.setItem(24, listButton);
-    	inventory.setItem(53, exitButton);
+    	setButton(inventory,Material.DIAMOND_BLOCK,ChatColor.GREEN+"Item Buy",20);
+    	setButton(inventory,Material.GOLD_BLOCK,ChatColor.YELLOW+"Item Sell",22);
+    	setButton(inventory,Material.BOOK,ChatColor.BLUE+"Trade List",24);
+    	setButton(inventory,Material.BARRIER,ChatColor.RED+"Exit",53);
     	
     	player.openInventory(inventory);
 	}
 	
-	public void onAuctionSell(Player player) {
-    	Inventory inventory = Bukkit.createInventory(null,54,"Auction : Sell");
-
-    	ItemStack selectButton = new ItemStack(Material.ANVIL);
-    	ItemStack registerButton = new ItemStack(Material.BOOK);
-    	ItemStack backButton = new ItemStack(Material.SIGN);
-    	ItemStack exitButton = new ItemStack(Material.TNT);
+	public void onAuctionSell(Player player, ItemStack item, int price) {
+    	Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(),54,"Auction : Sell");
     	
-    	ItemMeta meta = selectButton.getItemMeta();
-    	meta.setDisplayName(ChatColor.YELLOW+"Item Select");
-    	selectButton.setItemMeta(meta);
-
-    	meta.setDisplayName(ChatColor.GREEN+"Register");
-    	registerButton.setItemMeta(meta);
-
-    	meta.setDisplayName(ChatColor.GRAY+"Back");
-    	backButton.setItemMeta(meta);
+    	ItemMeta meta =null;
+    	meta = new ItemStack(Material.STONE).getItemMeta();
+    	ItemStack selectedItem = new ItemStack(Material.CHEST);
+    	if(item != null) {
+        	selectedItem = item;
+    	}else {
+    		meta.setDisplayName(ChatColor.GRAY+"Item Select");
+    		selectedItem.setItemMeta(meta);
+    	}
+    	inventory.setItem(10, selectedItem);
     	
-    	meta.setDisplayName(ChatColor.RED+"Exit");
-    	exitButton.setItemMeta(meta);
-
-    	inventory.setItem(10, selectButton);
-    	inventory.setItem(28, registerButton);
-    	inventory.setItem(45, backButton);
-    	inventory.setItem(53, exitButton);
+    	setButton(inventory,Material.GOLD_BLOCK,String.valueOf(price),19);
+    	setButton(inventory,Material.BOOK,ChatColor.GREEN+"Register",28);
+    	setButton(inventory,Material.SLIME_BALL,ChatColor.GRAY+"Back",45);
+    	setButton(inventory,Material.BARRIER,ChatColor.RED+"Exit",53);
     	
+    	player.openInventory(inventory);
+    	
+	}
+	
+	public void onAuctionPrice(Player player,  int price, ItemStack item) {
+    	Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(),27,"Price : "+String.valueOf(price));
+
+    	setButton(inventory,Material.IRON_NUGGET,ChatColor.RED+"Down 1",10);
+    	setButton(inventory,Material.IRON_INGOT,ChatColor.RED+"Down 10",11);
+    	setButton(inventory,Material.IRON_BLOCK,ChatColor.RED+"Down 100",12);
+    	
+    	inventory.setItem(13, item);
+    	
+    	setButton(inventory,Material.GOLD_BLOCK,ChatColor.GREEN+"UP 100",14);
+    	setButton(inventory,Material.GOLD_INGOT,ChatColor.GREEN+"UP 10",15);
+    	setButton(inventory,Material.GOLD_NUGGET,ChatColor.GREEN+"UP 1",16);
+    	
+    	setButton(inventory,Material.SUNFLOWER,ChatColor.GREEN+"Confirm",26);
+
     	player.openInventory(inventory);
 	}
 	
 	
-	public void onItemSelect(Player player) {
-
-    	Inventory inventory = Bukkit.createInventory(null,InventoryType.ANVIL,"Auction : Select");
-    	
-
-    	ItemStack selectButton = new ItemStack(Material.DIAMOND_BLOCK);
-    	ItemStack cancelButton = new ItemStack(Material.TNT);
-    	
-    	ItemMeta meta = selectButton.getItemMeta();
-    	meta.setDisplayName(ChatColor.GREEN+"Confirm");
-    	selectButton.setItemMeta(meta);
-
-    	meta.setDisplayName(ChatColor.RED+"CANCEL");
-    	cancelButton.setItemMeta(meta);
-    	
-    	
-
-    	inventory.setItem(1, selectButton);
-    	inventory.setItem(2, cancelButton);
-    	
-    	player.openInventory(inventory);
-    	
-    	
+	
+	private void setButton(Inventory inventory,Material icon, String name, int slot) {
+		ItemStack button = new ItemStack(icon);
+		ItemMeta meta = button.getItemMeta();
+		meta.setDisplayName(name);
+		button.setItemMeta(meta);
+		
+		inventory.setItem(slot, button);
 	}
+	
 	
 
 }

@@ -16,11 +16,10 @@ import main.Trade;
 
 
 public class CommandManager implements CommandExecutor {
-	private Trade trade;
-	private MenuInventory menuInventory = new MenuInventory();
+	private MenuInventory menuInventory;
 	
-	public CommandManager(Trade trade) {
-		this.trade = trade;
+	public CommandManager() {
+		menuInventory = Trade.menuInventory;
 	}
 
 	@Override

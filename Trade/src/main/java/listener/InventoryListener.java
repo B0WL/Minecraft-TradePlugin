@@ -1,10 +1,8 @@
 package listener;
 
 import org.bukkit.ChatColor;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -29,29 +27,31 @@ public class InventoryListener implements Listener {
 
 	@EventHandler
 	public void onPlayerClickInventory(InventoryClickEvent e) {
-
-		if (e.getInventory().getHolder() != null)
-			if (e.getInventory().getHolder() instanceof MenuInventoryHolder) {
-				e.setCancelled(true);
-				ItemStack clickedItem = e.getCurrentItem();
-
-				if (clickedItem.getItemMeta() != null) {
-					String title = e.getInventory().getTitle();
-					String clickedItemName = clickedItem.getItemMeta().getDisplayName();
+		if (e.getClickedInventory() != null)
+			if (e.getCurrentItem().getItemMeta() != null)
+				if (e.getCurrentItem().getItemMeta().getDisplayName() != null) {
+					e.setCancelled(true);
+					String clickedItemName = e.getCurrentItem().getItemMeta().getDisplayName();
 					Player player = (Player) e.getWhoClicked();
+					String title = player.getOpenInventory().getTopInventory().getTitle();
 
-					if (title.equals("Auction")) {
-						if (clickedItemName.equals(ChatColor.RED + "Exit")) {
-							player.closeInventory();
-						} else
+					if (title.equals("Auction"))
+						if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
+							if (clickedItemName.equals(ChatColor.RED + "Exit")) {
+								player.closeInventory();
+							} else
 
-						if (clickedItemName.equals(ChatColor.YELLOW + "Item Sell")) {
-							MenuInventory.onAuctionSell(player, null, 0);
-						}
-					} ////////////////////// Main
+							if (clickedItemName.equals(ChatColor.YELLOW + "Item Sell")) {
+								MenuInventory.onAuctionSell(player, null, 0);
+							}
+							
+							if(clickedItemName.equals(ChatColor.GREEN + "Item Buy")) {
+								MenuInventory.onAuctionBuy(player, 1);
+							}
+						} ////////////////////// Main ///////////////////////////////////////////
 
 					if (title.equals("Auction : Sell")) {
-						if (e.getClickedInventory() == player.getOpenInventory().getTopInventory()) {
+						if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 							if (clickedItemName.equals(ChatColor.GRAY + "Back")) {
 								MenuInventory.onAuctionMain(player);
 							} else
@@ -91,14 +91,13 @@ public class InventoryListener implements Listener {
 						}
 
 						else {// 버튼이 아닌경우, 즉 아이템
-							MenuInventory.onAuctionSell(player, clickedItem, Integer.parseInt(
+							MenuInventory.onAuctionSell(player, e.getCurrentItem(), Integer.parseInt(
 									getMenuItem(player, MenuInventory.sellPriceSlot).getItemMeta().getDisplayName()));
 						}
-					} ////////////////////// Sell
+					} ////////////////////// Sell ////////////////////////////////////////////////////
 
 					if (title.contains("Price")) {
-						if (e.getClickedInventory() == player.getOpenInventory().getTopInventory()) {
-
+						if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 							int price = Integer
 									.parseInt(player.getOpenInventory().getTopInventory().getTitle().split(" ")[2]);
 
@@ -107,7 +106,8 @@ public class InventoryListener implements Listener {
 								MenuInventory.onAuctionSell(player, getMenuItem(player, MenuInventory.priceItemSlot),
 										price);
 
-							} else {// 확인버튼이 아니면 파싱
+							} 		
+							else if (e.getRawSlot() != MenuInventory.priceItemSlot) {// 확인버튼, 아이템이 아니면 파싱
 								String buttonParsedString[] = clickedItemName.split(" ");
 								String updownString = buttonParsedString[0];
 								String buttonPriceString = buttonParsedString[1];
@@ -126,10 +126,8 @@ public class InventoryListener implements Listener {
 
 							}
 						}
-					} ////////////////////// Price
+					} ////////////////////// Price ///////////////////////////////////////////////
 				}
-
-			}
 
 	}
 

@@ -20,7 +20,6 @@ public class ItemSerializer {
 		try {
 			config.loadFromString(string);
 		} catch (InvalidConfigurationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		ItemStack item = config.getItemStack("item");

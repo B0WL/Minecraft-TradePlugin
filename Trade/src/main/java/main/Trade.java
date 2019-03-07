@@ -20,19 +20,14 @@ public class Trade extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
-		// TODO Auto-generated method stub
-
 		instance = this;
-
 		getConfig().options().copyDefaults(true);
 		saveConfig();
-
 		try {
 			new MenuInventory();
 		} catch (Exception e) {
 			getLogger().info("menuGUI Load Failed");
 		}
-
 		try {
 			// getServer().getPluginManager().registerEvents(new ItemListener(), this);
 			getServer().getPluginManager().registerEvents(new InventoryListener(), this);
@@ -43,25 +38,20 @@ public class Trade extends JavaPlugin {
 		try {
 			this.getCommand("Trade").setExecutor(new CommandManager());
 		} catch (Exception e) {
-
 			getLogger().info("Command Listen Failed");
 		}
-
 		try {
 			this.db = new SQLite(this);
 			this.db.load();
 		} catch (Exception e) {
-
 			getLogger().info("Database Load Failed");
 		}
-
 		getLogger().info("Trade onEnable");
 
 	}
 
 	@Override
 	public void onDisable() {
-		// TODO Auto-generated method stub
 		getLogger().info("Trade onDisable");
 	}
 

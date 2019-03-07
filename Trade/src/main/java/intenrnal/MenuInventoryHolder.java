@@ -9,9 +9,7 @@ public class MenuInventoryHolder implements InventoryHolder {
 	}
 
 	@Override
-	public Inventory getInventory() {
-		// TODO Auto-generated method stub
-		
+	public Inventory getInventory() {	
 		
 		return null;
 	}

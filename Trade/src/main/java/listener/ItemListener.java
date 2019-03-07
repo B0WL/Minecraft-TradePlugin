@@ -4,7 +4,6 @@ import java.util.HashMap;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.TreeType;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,7 +12,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 public class ItemListener implements Listener{
-	public HashMap<Player,Location> SelectMap = new HashMap();
+	public HashMap<Player,Location> SelectMap = new HashMap<Player, Location>();
 	
 	
 	

@@ -1,6 +1,5 @@
 package exception;
 
-import main.Trade;
 
 public class Errors {
     public static String sqlConnectionExecute(){

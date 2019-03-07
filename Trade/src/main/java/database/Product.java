@@ -1,18 +1,17 @@
 package database;
 
-import java.sql.Date;
 
 public class Product {
-	public String getId() {
+	public int getId() {
 		return id;
 	}
-	public void setId(String id) {
+	public void setId(int id) {
 		this.id = id;
 	}
-	public Date getCreation_time() {
+	public String getCreation_time() {
 		return creation_time;
 	}
-	public void setCreation_time(Date creation_time) {
+	public void setCreation_time(String creation_time) {
 		this.creation_time = creation_time;
 	}
 	public int getPrice() {
@@ -35,8 +34,8 @@ public class Product {
 	}
 	
 	
-	private String id;
-	private Date creation_time;
+	private int id;
+	private String creation_time;
 
 	private int price;
 	private String item;

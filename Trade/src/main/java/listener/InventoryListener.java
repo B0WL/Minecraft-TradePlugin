@@ -12,6 +12,7 @@ import intenrnal.AuctionRecorder;
 import intenrnal.MenuInventory;
 import intenrnal.MenuInventoryHolder;
 import main.Trade;
+import util.GUIManager;
 import util.ItemSerializer;
 
 public class InventoryListener implements Listener {
@@ -20,52 +21,49 @@ public class InventoryListener implements Listener {
 
 	}
 
-	ItemStack getMenuItem(Player player, int slot) {
-		ItemStack MenuItem = player.getOpenInventory().getTopInventory().getItem(slot);
-		return MenuItem;
-	}
-
 	@EventHandler
 	public void onPlayerClickInventory(InventoryClickEvent e) {
 		if (e.getClickedInventory() != null)
 			if (e.getCurrentItem().getItemMeta() != null)
 				if (e.getCurrentItem().getItemMeta().getDisplayName() != null) {
+					
 					e.setCancelled(true);
-					String clickedItemName = e.getCurrentItem().getItemMeta().getDisplayName();
+
 					Player player = (Player) e.getWhoClicked();
 					String title = player.getOpenInventory().getTopInventory().getTitle();
+					int slot = e.getRawSlot();
 
-					if (title.equals("Auction"))
+					if (title.contains("Main"))
 						if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
-							if (clickedItemName.equals(ChatColor.RED + "Exit")) {
+							if (slot == MenuInventory.mainExitSlot) {
 								player.closeInventory();
 							} else
 
-							if (clickedItemName.equals(ChatColor.YELLOW + "Item Sell")) {
+							if (slot == MenuInventory.mainSellSlot) {
 								MenuInventory.onAuctionSell(player, null, 0);
 							}
-							
-							if(clickedItemName.equals(ChatColor.GREEN + "Item Buy")) {
+
+							if (slot == MenuInventory.mainBuySlot) {
 								MenuInventory.onAuctionBuy(player, 1);
 							}
 						} ////////////////////// Main ///////////////////////////////////////////
 
-					if (title.equals("Auction : Sell")) {
+					if (title.contains("Sell")) {
 						if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
-							if (clickedItemName.equals(ChatColor.GRAY + "Back")) {
+							if (slot == MenuInventory.sellBackSlot) {
 								MenuInventory.onAuctionMain(player);
 							} else
 
-							if (clickedItemName.equals(ChatColor.RED + "Exit")) {
+							if (slot == MenuInventory.sellExitSlot) {
 								player.closeInventory();
 							} else
 
-							if (clickedItemName.equals(ChatColor.GREEN + "Register")) {
+							if (slot == MenuInventory.sellRegistSlot) {
 								Database db = Trade.instance.getRDatabase();
-								ItemStack item = getMenuItem(player, MenuInventory.sellItemSlot);
+								ItemStack item = GUIManager.getMenuItem(player, MenuInventory.sellItemSlot);
 								String itemNBT = ItemSerializer.itemToString(item);
 
-								String price = getMenuItem(player, MenuInventory.sellPriceSlot).getItemMeta()
+								String price = GUIManager.getMenuItem(player, MenuInventory.sellPriceSlot).getItemMeta()
 										.getDisplayName();
 
 								if (db != null)
@@ -83,16 +81,16 @@ public class InventoryListener implements Listener {
 							}
 
 							if (e.getRawSlot() == MenuInventory.sellPriceSlot) {/// 가격설정버튼, 위치로 보고 찾는다.
-								MenuInventory.onAuctionPrice(
-										player, Integer.parseInt(getMenuItem(player, MenuInventory.sellPriceSlot)
+								MenuInventory.onAuctionPrice(player,
+										Integer.parseInt(GUIManager.getMenuItem(player, MenuInventory.sellPriceSlot)
 												.getItemMeta().getDisplayName()),
-										getMenuItem(player, MenuInventory.sellItemSlot));
+										GUIManager.getMenuItem(player, MenuInventory.sellItemSlot));
 							}
 						}
 
 						else {// 버튼이 아닌경우, 즉 아이템
-							MenuInventory.onAuctionSell(player, e.getCurrentItem(), Integer.parseInt(
-									getMenuItem(player, MenuInventory.sellPriceSlot).getItemMeta().getDisplayName()));
+							MenuInventory.onAuctionSell(player, e.getCurrentItem(), Integer.parseInt(GUIManager
+									.getMenuItem(player, MenuInventory.sellPriceSlot).getItemMeta().getDisplayName()));
 						}
 					} ////////////////////// Sell ////////////////////////////////////////////////////
 
@@ -101,32 +99,50 @@ public class InventoryListener implements Listener {
 							int price = Integer
 									.parseInt(player.getOpenInventory().getTopInventory().getTitle().split(" ")[2]);
 
-							if (clickedItemName.equals(ChatColor.GREEN + "Confirm")) {
+							if (slot == MenuInventory.priceConfirmSlot) {
 								/// 확인 버튼
-								MenuInventory.onAuctionSell(player, getMenuItem(player, MenuInventory.priceItemSlot),
-										price);
+								MenuInventory.onAuctionSell(player,
+										GUIManager.getMenuItem(player, MenuInventory.priceItemSlot), price);
 
-							} 		
-							else if (e.getRawSlot() != MenuInventory.priceItemSlot) {// 확인버튼, 아이템이 아니면 파싱
-								String buttonParsedString[] = clickedItemName.split(" ");
+							} else if (e.getRawSlot() != MenuInventory.priceItemSlot) {// 확인버튼, 아이템이 아니면 파싱
+								String buttonParsedString[] = e.getCurrentItem().getItemMeta().getDisplayName()
+										.split(" ");
 								String updownString = buttonParsedString[0];
 								String buttonPriceString = buttonParsedString[1];
 
 								if (updownString.contains("UP")) {
 									price += Integer.parseInt(buttonPriceString);
 									MenuInventory.onAuctionPrice(player, price,
-											getMenuItem(player, MenuInventory.priceItemSlot));
+											GUIManager.getMenuItem(player, MenuInventory.priceItemSlot));
 								} else {
 									price -= Integer.parseInt(buttonPriceString);
 									if (price < 0)
 										price = 0;
 									MenuInventory.onAuctionPrice(player, price,
-											getMenuItem(player, MenuInventory.priceItemSlot));
+											GUIManager.getMenuItem(player, MenuInventory.priceItemSlot));
 								}
 
 							}
 						}
 					} ////////////////////// Price ///////////////////////////////////////////////
+
+					if (title.contains("buy")) {
+						if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
+							String pageString = GUIManager.getMenuItem(player, MenuInventory.buyPageSlot).getItemMeta()
+									.getDisplayName();
+							int page = Integer.parseInt(pageString);
+
+							if (slot == MenuInventory.buyPageBackSlot) {
+
+							} else if (slot == MenuInventory.buyPageNextSlot) {
+
+							}
+
+							MenuInventory.onAuctionBuy(player, page);
+
+						}
+					}
+
 				}
 
 	}

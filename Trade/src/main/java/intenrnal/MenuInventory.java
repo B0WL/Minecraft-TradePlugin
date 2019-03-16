@@ -1,7 +1,11 @@
 package intenrnal;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -18,12 +22,11 @@ import util.GUIManager;
 import util.ItemSerializer;
 
 public class MenuInventory {
-
-
 	public static int mainBuySlot = 11;
 	public static int mainSellSlot = 13;
 	public static int mainListSlot = 15;
 	public static int mainExitSlot = 26;
+
 	public static void onAuctionMain(Player player) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Auction : Main");
 
@@ -40,6 +43,7 @@ public class MenuInventory {
 	public static int sellRegistSlot = 15;
 	public static int sellBackSlot = 18;
 	public static int sellExitSlot = 26;
+
 	public static void onAuctionSell(Player player, ItemStack item, int price) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Auction : Sell");
 
@@ -63,6 +67,7 @@ public class MenuInventory {
 
 	public static int priceItemSlot = 13;
 	public static int priceConfirmSlot = 26;
+
 	public static void onAuctionPrice(Player player, int price, ItemStack item) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Price : " + String.valueOf(price));
 
@@ -86,41 +91,75 @@ public class MenuInventory {
 	public static int buyPageNextSlot = 50;
 	public static int buyBackSlot = 45;
 	public static int buyExitSlot = 53;
+
 	public static void onAuctionBuy(Player player, int page) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Buy");
 		Database DB = Trade.instance.getRDatabase();
 
 		List<Product> productList = DB.listItemAll(page);
-		
-		int numb=0;
-		for(Product product : productList) {
-			int id = product.getId();
-			int price = product.getPrice();
-			ItemStack item =ItemSerializer.stringToItem(product.getItem());
-			List<String> lore = new ArrayList<String>();
-			
-			lore.add("Product ID");
-			lore.add(Integer.toString(id));
-			lore.add("Price");
-			lore.add(Integer.toString(price));
-			
-			GUIManager.setProduct(inventory,item,numb,lore);
-			numb++;
-		}
+
+		int numb = 0;
+		if (productList != null)
+			if (!productList.isEmpty())
+				for (Product product : productList) {
+					int id = product.getId();
+					int price = product.getPrice();
+					java.util.Date creation_time = null;
+					try {
+						creation_time = Database.format.parse(product.getCreation_time());
+					} catch (ParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					java.util.Date present_time = new java.util.Date();
+					long diff = present_time.getTime() - creation_time.getTime();
+
+					player.sendMessage("========================");
+					player.sendMessage(product.getCreation_time());
+					player.sendMessage(String.valueOf(creation_time.getTime()));
+					player.sendMessage(creation_time.toString());
+
+					player.sendMessage("------------------------");
+					player.sendMessage(String.valueOf(present_time.getTime()));
+					player.sendMessage(present_time.toString());
+
+					player.sendMessage("------------------------");
+					player.sendMessage(String.valueOf(diff));
+					player.sendMessage("========================");
+					String hour = String.valueOf( (int)diff/1000/60 );
+
+					ItemStack item = ItemSerializer.stringToItem(product.getItem());
+					ItemMeta meta = item.getItemMeta();
+					List<String> lore = new ArrayList<String>();
+
+					if (meta.getLore() != null)
+						lore.addAll(meta.getLore());
+
+					lore.add("-----------------------");
+					lore.add("Product ID");
+					lore.add(Integer.toString(id));
+					lore.add("Price");
+					lore.add(Integer.toString(price));
+					lore.add("Remain Hour");
+					lore.add(hour+"Ка");
+
+					ItemStack button = item;
+					meta.setLore(lore);
+					button.setItemMeta(meta);
+
+					inventory.setItem(numb, button);
+
+					numb++;
+				}
 
 		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.RED + "Back Page", buyPageBackSlot);
-		GUIManager.setButton(inventory, Material.HEART_OF_THE_SEA, ChatColor.BLUE +Integer.toString(page), buyPageSlot);
+		GUIManager.setButton(inventory, Material.HEART_OF_THE_SEA, Integer.toString(page), buyPageSlot);
 		GUIManager.setButton(inventory, Material.SUNFLOWER, ChatColor.GREEN + "Next Page", buyPageNextSlot);
 
 		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back", buyBackSlot);
 		GUIManager.setButton(inventory, Material.BARRIER, ChatColor.RED + "Exit", buyExitSlot);
-		
 
 		player.openInventory(inventory);
 	}
-
-	
-
-	
 
 }

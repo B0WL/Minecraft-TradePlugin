@@ -18,14 +18,7 @@ public class GUIManager {
 
 		inventory.setItem(slot, button);
 	}
-	public static void setProduct(Inventory inventory, ItemStack product,int slot,List<String> lore) {
-		ItemStack button = product;
-		ItemMeta meta = button.getItemMeta();
-		meta.setLore(lore);
-		button.setItemMeta(meta);
 
-		inventory.setItem(slot, button);
-	}
 	
 	public static ItemStack getMenuItem(Player player, int slot) {
 		ItemStack MenuItem = player.getOpenInventory().getTopInventory().getItem(slot);

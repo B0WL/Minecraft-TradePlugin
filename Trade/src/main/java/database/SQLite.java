@@ -17,9 +17,11 @@ public class SQLite extends Database{
         dbname = plugin.getConfig().getString("SQLite.Filename", "Auction"); // Set the table name here e.g player_kills
     }
 
-    public String SQLiteCreateOrderTable = "CREATE TABLE IF NOT EXISTS Product (" +
+    public String SQLiteCreateOrderTable = 
+    		"CREATE TABLE IF NOT EXISTS Product (" +
             "`id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
-            "`creation_time` DATETIME DEFAULT CURRENT_TIMESTAMP,"+
+            "`creation_time` DATETIME NOT NULL,"+
+            "`sold` INTEGER DEFAULT 0,"+
             "`owner` TEXT NOT NULL,"+
             "`item` TEXT NOT NULL,"+
             "`price` INTEGER NOT NULL"+

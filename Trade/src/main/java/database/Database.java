@@ -93,6 +93,7 @@ public abstract class Database {
 				"SELECT item FROM "+table
 				+" WHERE id = "+id
 				+";";
+		AuctionRecorder.recordAuction("query", query);
 		
 		try {
 			conn= getSQLConnection();
@@ -123,10 +124,12 @@ public abstract class Database {
 		PreparedStatement ps = null;
 		
 		String query = 
-				"UPDATE FROM "+table+
+				"UPDATE "+table+
 				" SET sold = 1"
 				+" WHERE id = "+id
 				+";";
+		
+		AuctionRecorder.recordAuction("query", query);
 		
 		try {
 			conn = getSQLConnection();
@@ -222,18 +225,14 @@ public abstract class Database {
 			rs = ps.executeQuery();
 			
 			while(rs.next()) {
-				
 				Product product = new Product();
 				product.setId(rs.getInt("id"));
-				
-				AuctionRecorder.recordAuction("time", rs.getString("creation_time"));
 				product.setCreation_time(rs.getString("creation_time"));
 				product.setItem(rs.getString("item"));
 				product.setOwner(rs.getString("owner"));
 				product.setPrice(rs.getInt("price"));
-				
+				product.setSold(rs.getInt("sold"));
 				productList.add(product);
-				
 			}
 			return productList;			
 		} catch (SQLException ex) {
@@ -248,9 +247,57 @@ public abstract class Database {
                 plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
             }
         }
-
+		return null;
+	}
+	
+	
+	public List<Product> listItemUser(Player player,int page) {
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
 		
-
+		List<Product> productList = new ArrayList<Product>();
+		int selectColumn = (page-1)*45-1;
+		if(selectColumn<0) selectColumn=0;		
+		
+		String id = player.getUniqueId().toString();
+		
+		String query = 
+				"SELECT * FROM " + table 
+				+" WHERE id NOT IN"
+				+" (SELECT id FROM " + table
+				+" ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
+				+" AND owner = \""+ id + "\""
+				+" ORDER BY id DESC LIMIT 45;";
+				
+        try {
+    		conn = getSQLConnection();
+			ps = conn.prepareStatement(query);
+			rs = ps.executeQuery();
+			
+			while(rs.next()) {
+				Product product = new Product();
+				product.setId(rs.getInt("id"));
+				product.setCreation_time(rs.getString("creation_time"));
+				product.setItem(rs.getString("item"));
+				product.setOwner(rs.getString("owner"));
+				product.setPrice(rs.getInt("price"));
+				product.setSold(rs.getInt("sold"));
+				productList.add(product);
+			}
+			return productList;			
+		} catch (SQLException ex) {
+			 plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
+		} finally {
+            try {
+                if (ps != null)
+                    ps.close();
+                if (conn != null)
+                    conn.close();
+            } catch (SQLException ex) {
+                plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
+            }
+        }
 		return null;
 	}
 

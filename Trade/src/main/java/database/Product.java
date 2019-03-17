@@ -32,11 +32,18 @@ public class Product {
 	public void setOwner(String owner) {
 		this.owner = owner;
 	}
+	public int getSold() {
+		return sold;
+	}
+	public void setSold(int sold) {
+		this.sold = sold;
+	}
 	
 	
 	private int id;
 	private String creation_time;
 
+	private int sold;
 	private int price;
 	private String item;
 	private String owner;

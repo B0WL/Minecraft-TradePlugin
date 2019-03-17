@@ -114,19 +114,7 @@ public class MenuInventory {
 					java.util.Date present_time = new java.util.Date();
 					long diff = present_time.getTime() - creation_time.getTime();
 
-					player.sendMessage("========================");
-					player.sendMessage(product.getCreation_time());
-					player.sendMessage(String.valueOf(creation_time.getTime()));
-					player.sendMessage(creation_time.toString());
-
-					player.sendMessage("------------------------");
-					player.sendMessage(String.valueOf(present_time.getTime()));
-					player.sendMessage(present_time.toString());
-
-					player.sendMessage("------------------------");
-					player.sendMessage(String.valueOf(diff));
-					player.sendMessage("========================");
-					String hour = String.valueOf( (int)diff/1000/60 );
+					String hour = String.valueOf(72 - (int)(diff/1000/60/60));
 
 					ItemStack item = ItemSerializer.stringToItem(product.getItem());
 					ItemMeta meta = item.getItemMeta();
@@ -136,12 +124,12 @@ public class MenuInventory {
 						lore.addAll(meta.getLore());
 
 					lore.add("-----------------------");
-					lore.add("Product ID");
-					lore.add(Integer.toString(id));
-					lore.add("Price");
-					lore.add(Integer.toString(price));
-					lore.add("Remain Hour");
-					lore.add(hour+"Ка");
+					lore.add(ChatColor.WHITE +"Remain Hour");
+					lore.add(ChatColor.YELLOW + hour+"hour");
+					lore.add(ChatColor.WHITE +"Price");
+					lore.add(ChatColor.YELLOW +Integer.toString(price));
+					lore.add(ChatColor.BLACK +"Product ID");
+					lore.add(ChatColor.BLACK +Integer.toString(id));
 
 					ItemStack button = item;
 					meta.setLore(lore);
@@ -154,12 +142,90 @@ public class MenuInventory {
 
 		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.RED + "Back Page", buyPageBackSlot);
 		GUIManager.setButton(inventory, Material.HEART_OF_THE_SEA, Integer.toString(page), buyPageSlot);
-		GUIManager.setButton(inventory, Material.SUNFLOWER, ChatColor.GREEN + "Next Page", buyPageNextSlot);
+		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GREEN + "Next Page", buyPageNextSlot);
 
 		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back", buyBackSlot);
 		GUIManager.setButton(inventory, Material.BARRIER, ChatColor.RED + "Exit", buyExitSlot);
 
 		player.openInventory(inventory);
 	}
+	
+	
+	
+	
+	
+	public static void onAuctionList(Player player, int page) {
+		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : List");
+		Database DB = Trade.instance.getRDatabase();
+
+		List<Product> productList = DB.listItemUser(player,page);
+
+		int numb = 0;
+		if (productList != null)
+			if (!productList.isEmpty())
+				for (Product product : productList) {
+					int id = product.getId();
+					int price = product.getPrice();
+					java.util.Date creation_time = null;
+					try {
+						creation_time = Database.format.parse(product.getCreation_time());
+					} catch (ParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					java.util.Date present_time = new java.util.Date();
+					long diff = present_time.getTime() - creation_time.getTime();
+
+					String hour = String.valueOf(72 - (int)(diff/1000/60/60));
+
+					ItemStack item = ItemSerializer.stringToItem(product.getItem());
+					ItemMeta meta = item.getItemMeta();
+					List<String> lore = new ArrayList<String>();
+					String sold = "";
+					if(product.getSold() == 1) {
+						sold =ChatColor.YELLOW+ "Sold Out";
+					}else if(Integer.parseInt(hour)<0){
+						sold =ChatColor.RED+ "Failed";
+					}else {
+						sold =ChatColor.GREEN+ "On Sale";
+					}
+
+					if (meta.getLore() != null)
+						lore.addAll(meta.getLore());
+
+					lore.add(ChatColor.GRAY +"-----------------------");
+					lore.add(ChatColor.WHITE +"Remain Hour");
+					lore.add(ChatColor.YELLOW + hour+"hour");
+					lore.add(ChatColor.WHITE +"Price");
+					lore.add(ChatColor.YELLOW +Integer.toString(price));
+					lore.add(ChatColor.WHITE +"Status");
+					lore.add(sold);
+					lore.add(ChatColor.BLACK +"Product ID");
+					lore.add(ChatColor.BLACK +Integer.toString(id));
+
+					ItemStack button = item;
+					meta.setLore(lore);
+					button.setItemMeta(meta);
+
+					inventory.setItem(numb, button);
+
+					numb++;
+				}
+		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.RED + "Back Page", buyPageBackSlot);
+		GUIManager.setButton(inventory, Material.HEART_OF_THE_SEA, Integer.toString(page), buyPageSlot);
+		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GREEN + "Next Page", buyPageNextSlot);
+		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back", buyBackSlot);
+		GUIManager.setButton(inventory, Material.BARRIER, ChatColor.RED + "Exit", buyExitSlot);
+
+		player.openInventory(inventory);
+		
+		
+	}
+	
+	
+	
+	
+	
+	
 
 }

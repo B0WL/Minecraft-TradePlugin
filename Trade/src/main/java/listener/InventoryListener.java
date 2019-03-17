@@ -21,9 +21,11 @@ import util.ItemSerializer;
 
 public class InventoryListener implements Listener {
 	Economy econ;
+	Database db;
 
 	public InventoryListener() {
 		econ = Trade.instance.getEconomy();
+		db = Trade.instance.getRDatabase();
 
 	}
 
@@ -53,6 +55,9 @@ public class InventoryListener implements Listener {
 
 								if (slot == MenuInventory.mainBuySlot) {
 									MenuInventory.onAuctionBuy(player, 1);
+								}
+								if (slot == MenuInventory.mainListSlot) {
+									MenuInventory.onAuctionList(player, 1);
 								}
 							} ////////////////////// Main ///////////////////////////////////////////
 
@@ -158,22 +163,78 @@ public class InventoryListener implements Listener {
 								} else if (slot == MenuInventory.buyExitSlot) {
 									player.closeInventory();
 								} else if (slot != MenuInventory.buyPageSlot) {// 모든 버튼이 아닌경우 경매장아이템
-
-									Database db = Trade.instance.getRDatabase();
 									if (db != null) {
 										List<String> lore = e.getCurrentItem().getItemMeta().getLore();
-										String id = lore.get(lore.indexOf("Product ID")+1);
-										String price = lore.get(lore.indexOf("Price")+1);
+										String id =ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK +"Product ID") + 1));
+										String price = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.WHITE +"Price") + 1));
 										String item = db.selectItem(id);
 										if (item != null)
-											if (db.buyItem(id) == 1) {// db에서 판매됨 상태로 변경
-												player.closeInventory();
+											if (econ.has(player, Double.parseDouble(price)))
+												if (db.buyItem(id) == 1) {// db에서 판매됨 상태로 변경
+													player.closeInventory();
+													player.getInventory().addItem(ItemSerializer.stringToItem(item));
+													econ.withdrawPlayer(player, Integer.parseInt(price));
+
+													AuctionRecorder.recordAuction("BUY", item);
+													AuctionRecorder.messageAuction(player, "BUY", item);
+												}
+
+									}
+
+								}
+
+							}
+						} ///////////////////////////// BUY //////////////////////////////////////
+						if (title.contains("List")) {
+							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
+
+								if (slot == MenuInventory.buyPageBackSlot || slot == MenuInventory.buyPageNextSlot) {
+									String pageString = GUIManager.getMenuItem(player, MenuInventory.buyPageSlot)
+											.getItemMeta().getDisplayName();
+									int page = Integer.parseInt(pageString);
+
+									if (slot == MenuInventory.buyPageBackSlot) {
+										if (page != 1) {
+											page--;
+										}
+									} else {
+										if (menu.getItem(44) != null)
+											page++;
+									}
+
+									MenuInventory.onAuctionBuy(player, page);
+								} else if (slot == MenuInventory.buyBackSlot) {
+									MenuInventory.onAuctionMain(player);
+								} else if (slot == MenuInventory.buyExitSlot) {
+									player.closeInventory();
+								} else if (slot != MenuInventory.buyPageSlot) {// 모든 버튼이 아닌경우 경매장아이템
+
+									String pageString = GUIManager.getMenuItem(player, MenuInventory.buyPageSlot)
+											.getItemMeta().getDisplayName();
+									int page = Integer.parseInt(pageString);
+									
+									if (db != null) {
+										List<String> lore = e.getCurrentItem().getItemMeta().getLore();
+										String id =ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK +"Product ID") + 1));
+										String price = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.WHITE +"Price") + 1));
+										String item = db.selectItem(id);
+										
+										String status = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.WHITE +"Status") + 1));
+										if (item != null) {
+											if(status.contains("Sold Out")) {
+												db.deleteItem(id);
+												econ.depositPlayer(player,Double.parseDouble(price));
+
+												MenuInventory.onAuctionList(player, page);
+											}else if (status.contains("Failed")){
+												db.deleteItem(id);
 												player.getInventory().addItem(ItemSerializer.stringToItem(item));
-												econ.withdrawPlayer(player, Integer.parseInt(price));
-												
-												AuctionRecorder.recordAuction("BUY", item);
-												AuctionRecorder.messageAuction(player, "BUY", item);
+
+												MenuInventory.onAuctionList(player, page);
+											}else {//판매중
+												//내릴지 여부묻기
 											}
+										}
 
 									}
 
@@ -181,9 +242,7 @@ public class InventoryListener implements Listener {
 
 							}
 						}
-
 					}
-
 	}
 
 }

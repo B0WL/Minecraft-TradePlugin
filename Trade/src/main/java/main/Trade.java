@@ -29,6 +29,15 @@ public class Trade extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
 			return;
 		}
+		try {
+			db = new SQLite(this);
+			db.load();
+		} catch (Exception e) {
+			getLogger().info("Database Load Failed");
+			getServer().getPluginManager().disablePlugin(this);
+		}
+		
+		
 		
 		try {
 			// getServer().getPluginManager().registerEvents(new ItemListener(), this);
@@ -43,14 +52,6 @@ public class Trade extends JavaPlugin {
 			getLogger().info("Command Listen Failed");
 			getServer().getPluginManager().disablePlugin(this);
 		}
-		try {
-			db = new SQLite(this);
-			db.load();
-		} catch (Exception e) {
-			getLogger().info("Database Load Failed");
-			getServer().getPluginManager().disablePlugin(this);
-		}
-		
 		getLogger().info("Trade onEnable");
 
 	}

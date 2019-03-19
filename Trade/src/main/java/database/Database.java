@@ -22,8 +22,7 @@ import main.Trade;
 public abstract class Database {
 	Trade plugin;
 	Connection connection;
-	// The name of the table we created back in SQLite class.
-	public String table = "Product";
+	public String product = "Product";
 	public int tokens = 0;
 
 	public Database(Trade instance) {
@@ -37,7 +36,7 @@ public abstract class Database {
 	public void initialize() {
 		connection = getSQLConnection();
 		try {
-			PreparedStatement ps = connection.prepareStatement("SELECT * FROM " + table + " WHERE id = ?");
+			PreparedStatement ps = connection.prepareStatement("SELECT * FROM " + product + " WHERE id = ?");
 			ps.setString(1, "");
 			ResultSet rs = ps.executeQuery();
 			close(ps, rs);
@@ -57,7 +56,7 @@ public abstract class Database {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		String query = 
-				"INSERT INTO " + table 
+				"INSERT INTO " + product 
 				+ " (owner,item,price,creation_time) VALUES(?,?,?,"+"\""+creationStirng+"\""+")";
 		
 		try {
@@ -90,7 +89,7 @@ public abstract class Database {
 		ResultSet rs =null;
 		
 		String query = 
-				"SELECT item FROM "+table
+				"SELECT item FROM "+product
 				+" WHERE id = "+id
 				+";";
 		AuctionRecorder.recordAuction("query", query);
@@ -119,13 +118,13 @@ public abstract class Database {
 		return null;
 	}
 	
-	public int buyItem(String id) {
+	public int setSold(String id, int sold) {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		
 		String query = 
-				"UPDATE "+table+
-				" SET sold = 1"
+				"UPDATE "+product+
+				" SET sold = "+String.valueOf(sold)
 				+" WHERE id = "+id
 				+";";
 		
@@ -154,14 +153,14 @@ public abstract class Database {
 		
 		
 	}
-	
+
 	
 	public int deleteItem(String id) {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		
 		String query = 
-				"DELETE FROM "+table
+				"DELETE FROM "+product
 				+" WHERE id = "+id
 				+";";
 		
@@ -185,8 +184,6 @@ public abstract class Database {
 			}
 		}
 		return 0;
-		
-		
 	}
 	
 	public static SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",Locale.KOREA);
@@ -201,25 +198,29 @@ public abstract class Database {
 		if(selectColumn<0) selectColumn=0;
 		
 		Date time = new Date();
+		int period = Trade.instance.getConfig().getInt("Regist_period");
 		
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(time);
-		cal.add(Calendar.DATE, -3);
+		cal.add(Calendar.HOUR, -period);
 		
 		Date timePast = cal.getTime();
 		
 		String query = 
-				"SELECT * FROM " + table 
+				"SELECT * FROM " + product 
 				+" WHERE id NOT IN"
-				+" (SELECT id FROM " + table
+				+" (SELECT id FROM " + product
 				+" ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
 				+" AND sold = 0"
 				+" AND creation_time BETWEEN "
 				+"\""+format.format(timePast.getTime())+"\" AND \""+format.format(time.getTime())+"\""
 				+" ORDER BY id DESC LIMIT 45;";
+		
+		//AuctionRecorder.recordAuction("query", query);
 				
-        try {
-    		conn = getSQLConnection();
+		
+		try {
+    	conn = getSQLConnection();
 			ps = conn.prepareStatement(query);
 			
 			rs = ps.executeQuery();
@@ -263,9 +264,9 @@ public abstract class Database {
 		String id = player.getUniqueId().toString();
 		
 		String query = 
-				"SELECT * FROM " + table 
+				"SELECT * FROM " + product 
 				+" WHERE id NOT IN"
-				+" (SELECT id FROM " + table
+				+" (SELECT id FROM " + product
 				+" ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
 				+" AND owner = \""+ id + "\""
 				+" ORDER BY id DESC LIMIT 45;";

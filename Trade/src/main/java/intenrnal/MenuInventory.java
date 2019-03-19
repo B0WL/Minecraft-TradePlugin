@@ -86,6 +86,31 @@ public class MenuInventory {
 		player.openInventory(inventory);
 	}
 
+	public static int checkItemSlot = 11;
+	public static int checkDropSlot = 15;
+	public static int checkBackSlot = 18;
+	
+	public static void onAuctionCheckDrop(Player player, ItemStack item, String price, String id, boolean isDrop) {
+		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Drop : " +item.getItemMeta().getDisplayName());
+		inventory.setItem(checkItemSlot, item);
+		
+		String isDropString = "";
+		if(isDrop) {
+			isDropString = "Drop";
+		}else {
+			isDropString = "Delete";
+		}
+		
+		GUIManager.setButton(inventory, Material.TNT, ChatColor.RED+ isDropString+" this item", checkDropSlot);
+		
+		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back", checkBackSlot);
+		player.openInventory(inventory);
+	}
+	
+	
+	
+	
+	
 	public static int buyPageBackSlot = 48;
 	public static int buyPageSlot = 49;
 	public static int buyPageNextSlot = 50;
@@ -114,7 +139,8 @@ public class MenuInventory {
 					java.util.Date present_time = new java.util.Date();
 					long diff = present_time.getTime() - creation_time.getTime();
 
-					String hour = String.valueOf(72 - (int)(diff/1000/60/60));
+					int period = Trade.instance.getConfig().getInt("Regist_period");
+					String hour = String.valueOf(period - (int)(diff/1000/60/60));
 
 					ItemStack item = ItemSerializer.stringToItem(product.getItem());
 					ItemMeta meta = item.getItemMeta();
@@ -175,8 +201,9 @@ public class MenuInventory {
 					}
 					java.util.Date present_time = new java.util.Date();
 					long diff = present_time.getTime() - creation_time.getTime();
+					int period = Trade.instance.getConfig().getInt("Regist_period");
 
-					String hour = String.valueOf(72 - (int)(diff/1000/60/60));
+					String hour = String.valueOf(period - (int)(diff/1000/60/60));
 
 					ItemStack item = ItemSerializer.stringToItem(product.getItem());
 					ItemMeta meta = item.getItemMeta();
@@ -186,8 +213,14 @@ public class MenuInventory {
 						sold =ChatColor.YELLOW+ "Sold Out";
 					}else if(Integer.parseInt(hour)<0){
 						sold =ChatColor.RED+ "Failed";
-					}else {
+					}else if(product.getSold() == 0){
 						sold =ChatColor.GREEN+ "On Sale";
+					}else if(product.getSold() ==2) {
+						sold = ChatColor.DARK_RED+"Stop Sale";
+					}else if(product.getSold() ==3) {
+						sold = ChatColor.DARK_RED+"Confiscation";
+					}else {
+						sold = "error";
 					}
 
 					if (meta.getLore() != null)
@@ -219,7 +252,6 @@ public class MenuInventory {
 
 		player.openInventory(inventory);
 		
-		
 	}
 	
 	
@@ -229,3 +261,21 @@ public class MenuInventory {
 	
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

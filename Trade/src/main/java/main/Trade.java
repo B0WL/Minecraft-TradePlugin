@@ -22,7 +22,7 @@ public class Trade extends JavaPlugin {
 		instance =this;
 		getConfig().options().copyDefaults(true);
 		saveConfig();
-		
+		reloadConfig();
 		
 		if(!setupEconomy()) {
 			getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!", getDescription().getName()));
@@ -47,7 +47,8 @@ public class Trade extends JavaPlugin {
 			getServer().getPluginManager().disablePlugin(this);
 		}
 		try {
-			this.getCommand("Trade").setExecutor(new CommandManager());
+			this.getCommand("Auction").setExecutor(new CommandManager());
+			this.getCommand("test").setExecutor(new CommandManager());
 		} catch (Exception e) {
 			getLogger().info("Command Listen Failed");
 			getServer().getPluginManager().disablePlugin(this);

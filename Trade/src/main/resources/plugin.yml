@@ -4,7 +4,18 @@ version: 0.0.1-SANPSHOT
 author: B0WL
 api-version: 1.13
 depend: [Vault]
+
 commands:
-  Trade:
-    description: trade
-    usage: /<command> <auction/eco>
+  Auction:
+    description: auction
+    usage: /<command>  
+  Test:
+    description: test
+    permission: auction.manager
+    usage: /<command> <nbt|eco>
+    
+permissions:
+  auction.user:
+    default: true
+  auction.manager:
+    default: op

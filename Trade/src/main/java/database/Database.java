@@ -15,9 +15,9 @@ import java.util.logging.Level;
 import org.bukkit.entity.Player;
 
 import exception.Errors;
-import intenrnal.AuctionRecorder;
 import exception.Error;
 import main.Trade;
+import util.AuctionRecorder;
 
 public abstract class Database {
 	Trade plugin;

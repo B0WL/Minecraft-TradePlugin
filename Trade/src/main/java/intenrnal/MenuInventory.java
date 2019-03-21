@@ -91,7 +91,15 @@ public class MenuInventory {
 	public static int checkBackSlot = 18;
 	
 	public static void onAuctionCheckDrop(Player player, ItemStack item, String price, String id, boolean isDrop) {
-		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Drop : " +item.getItemMeta().getDisplayName());
+		String name = "";
+		
+		if(item.getItemMeta().hasDisplayName())
+			name = item.getItemMeta().getDisplayName();
+		else
+			name = item.getType().name();
+		
+		
+		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Drop : " +name);
 		inventory.setItem(checkItemSlot, item);
 		
 		String isDropString = "";
@@ -133,7 +141,6 @@ public class MenuInventory {
 					try {
 						creation_time = Database.format.parse(product.getCreation_time());
 					} catch (ParseException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					java.util.Date present_time = new java.util.Date();
@@ -196,7 +203,6 @@ public class MenuInventory {
 					try {
 						creation_time = Database.format.parse(product.getCreation_time());
 					} catch (ParseException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					java.util.Date present_time = new java.util.Date();

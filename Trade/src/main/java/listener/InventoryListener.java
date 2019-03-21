@@ -12,13 +12,14 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import database.Database;
-import intenrnal.AuctionRecorder;
 import intenrnal.MenuInventory;
 import intenrnal.MenuInventoryHolder;
 import main.Trade;
 import net.milkbowl.vault.economy.Economy;
+import util.AuctionRecorder;
 import util.GUIManager;
 import util.ItemSerializer;
+import util.SoundManager;
 
 public class InventoryListener implements Listener {
 	Economy econ;
@@ -44,24 +45,27 @@ public class InventoryListener implements Listener {
 						String title = menu.getTitle();
 						int slot = e.getRawSlot();
 
+						SoundManager.clickSound(player);
+
+						// TODO Listen_Main
 						if (title.contains("Main"))
-							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
+							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {								
 								if (slot == MenuInventory.mainExitSlot) {
 									player.closeInventory();
-								} else
-
-								if (slot == MenuInventory.mainSellSlot) {
+								} 
+								else if (slot == MenuInventory.mainSellSlot) {
 									MenuInventory.onAuctionSell(player, null, 0);
 								}
 
-								if (slot == MenuInventory.mainBuySlot) {
+								else if (slot == MenuInventory.mainBuySlot) {
 									MenuInventory.onAuctionBuy(player, 1);
 								}
-								if (slot == MenuInventory.mainListSlot) {
+								else if (slot == MenuInventory.mainListSlot) {
 									MenuInventory.onAuctionList(player, 1);
 								}
 							} ////////////////////// Main ///////////////////////////////////////////
 
+						// TODO Listen_Sell
 						if (title.contains("Sell")) {
 							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 								if (slot == MenuInventory.sellBackSlot) {
@@ -86,10 +90,10 @@ public class InventoryListener implements Listener {
 												player.getInventory().removeItem(item);
 												MenuInventory.onAuctionList(player, 1);
 
-												String message = itemNBT + "\r\n" + price;
-												String reason = "Item Registered";
-												AuctionRecorder.recordAuction(reason, message);
-												AuctionRecorder.messageAuction(player, reason, message);
+												AuctionRecorder.recordAuction("Regist", itemNBT,player,price);
+												AuctionRecorder.messageAuction(player, "registered", itemNBT,price);
+												
+												SoundManager.successSound(player);
 											}
 
 								}
@@ -102,12 +106,13 @@ public class InventoryListener implements Listener {
 								}
 							}
 
-							else {// 버튼이 아닌경우, 즉 아이템
+							else {// 버튼이 아닌경우, 즉 아이템 올리기
 								MenuInventory.onAuctionSell(player, e.getCurrentItem(), Integer.parseInt(
 										GUIManager.getMenuItem(player, MenuInventory.sellPriceSlot).getItemMeta().getDisplayName()));
 							}
 						} ////////////////////// Sell ////////////////////////////////////////////////////
 
+						// TODO Listen_Price
 						if (title.contains("Price")) {
 							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 								int price = Integer.parseInt(player.getOpenInventory().getTopInventory().getTitle().split(" ")[2]);
@@ -138,6 +143,7 @@ public class InventoryListener implements Listener {
 							}
 						} ////////////////////// Price ///////////////////////////////////////////////
 
+						// TODO Listen_Buy
 						if (title.contains("Buy")) {
 							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 								String pageString = GUIManager.getMenuItem(player, MenuInventory.buyPageSlot).getItemMeta()
@@ -168,21 +174,30 @@ public class InventoryListener implements Listener {
 											String price = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.WHITE + "Price") + 1));
 											String item = db.selectItem(id);
 											if (item != null)
-												if (econ.has(player, Double.parseDouble(price)))
-													if (db.setSold(id,1) == 1) {// db에서 판매됨 상태로 변경
+												if (econ.has(player, Double.parseDouble(price))) {
+													if (db.setSold(id, 1) == 1) {
 														MenuInventory.onAuctionBuy(player, page);
+														
 														player.getInventory().addItem(ItemSerializer.stringToItem(item));
 														econ.withdrawPlayer(player, Integer.parseInt(price));
 
-														AuctionRecorder.recordAuction("BUY", item);
-														AuctionRecorder.messageAuction(player, "BUY", item);
+														AuctionRecorder.recordAuction("BUY", item,player,price);
+														AuctionRecorder.messageAuction(player, "bought", item, price);
+														SoundManager.successSound(player);
 													}
+												}else {
+													SoundManager.failedSound(player);	
+													AuctionRecorder.messageAuction(player, "Failed", "Have not enough money.");
+													
+												}
 										}
 									}
 								}
 
 							}
 						} ///////////////////////////// BUY //////////////////////////////////////
+
+						// TODO Listen_List
 						if (title.contains("List")) {
 							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 
@@ -218,18 +233,25 @@ public class InventoryListener implements Listener {
 
 										String status = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.WHITE + "Status") + 1));
 										if (item != null) {
-											if (status.contains("Sold Out") || status.contains("Stop Sale")) {
+											if (status.contains("Sold Out")) {
 												db.deleteItem(id);
 												econ.depositPlayer(player, Double.parseDouble(price));
 
 												MenuInventory.onAuctionList(player, page);
+
+												AuctionRecorder.recordAuction("SELL", item,player,price);
+												AuctionRecorder.messageAuction(player, "sold", item, price);
+												SoundManager.successSound(player);
 											} else if (status.contains("Failed")) {
 												db.deleteItem(id);
 												player.getInventory().addItem(ItemSerializer.stringToItem(item));
 
 												MenuInventory.onAuctionList(player, page);
-											} else if(status.contains("On Sale")){/// 판매중
-												MenuInventory.onAuctionCheckDrop(player, e.getCurrentItem(), price, id,false);
+												
+												SoundManager.failedSound(player);	
+												AuctionRecorder.messageAuction(player, "Failed", "Time out.");
+											} else if (status.contains("On Sale")) {//판매중인것 제거
+												MenuInventory.onAuctionCheckDrop(player, e.getCurrentItem(), price, id, false);
 											}
 										}
 									}
@@ -238,6 +260,7 @@ public class InventoryListener implements Listener {
 							}
 						} ////////////////// List/////////////////////
 
+						// TODO Listen_Drop
 						if (title.contains("Drop")) {
 							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 
@@ -250,7 +273,7 @@ public class InventoryListener implements Listener {
 
 										String item = db.selectItem(id);
 										if (item != null) {
-											db.setSold(id, 2);
+											db.deleteItem(id);
 											player.getInventory().addItem(ItemSerializer.stringToItem(item));
 
 											MenuInventory.onAuctionList(player, 1);

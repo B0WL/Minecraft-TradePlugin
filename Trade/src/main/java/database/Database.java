@@ -25,13 +25,15 @@ public abstract class Database {
 	public String product = "Product";
 	public int tokens = 0;
 
+	public static SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",Locale.KOREA);
+
 	public Database(Trade instance) {
 		plugin = instance;
 	}
-
 	public abstract Connection getSQLConnection();
-
 	public abstract void load();
+	
+	
 
 	public void initialize() {
 		connection = getSQLConnection();
@@ -45,7 +47,10 @@ public abstract class Database {
 			plugin.getLogger().log(Level.SEVERE, "Unable to retreive connection", ex);
 		}
 	}
+	
+	
 
+	//FLAG QUERY_REGI_ITEM
 	public int registItem(Player player, String item, String price) {// 1= success 0= fail
 		String playerID = player.getUniqueId().toString();
 		int priceInt = Integer.parseInt(price);
@@ -83,6 +88,9 @@ public abstract class Database {
 		}
 		return 0;
 	}
+	
+	
+	//FLAG QUERY_SELE_ITEM
 	public String selectItem(String id) {
 		Connection conn = null;
 		PreparedStatement ps = null;
@@ -118,6 +126,8 @@ public abstract class Database {
 		return null;
 	}
 	
+	
+	//FLAG QUERY_SET_SOLD
 	public int setSold(String id, int sold) {
 		Connection conn = null;
 		PreparedStatement ps = null;
@@ -154,7 +164,9 @@ public abstract class Database {
 		
 	}
 
+
 	
+	//FLAG QUERY_DELE_ITEM
 	public int deleteItem(String id) {
 		Connection conn = null;
 		PreparedStatement ps = null;
@@ -186,9 +198,63 @@ public abstract class Database {
 		return 0;
 	}
 	
-	public static SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",Locale.KOREA);
 	
+	
+
+	//FLAG QUERY_ITEM_ALL
 	public List<Product> listItemAll(int page) {
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		
+		List<Product> productList = new ArrayList<Product>();
+		int selectColumn = (page-1)*45-1;
+		if(selectColumn<0) selectColumn=0;
+		
+		
+		String query = 
+				"SELECT * FROM " + product 
+				+" WHERE id NOT IN"
+				+" (SELECT id FROM " + product
+				+" ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
+				+" ORDER BY id DESC LIMIT 45;";
+		
+		//AuctionRecorder.recordAuction("query", query);
+		
+		try {
+    	conn = getSQLConnection();
+			ps = conn.prepareStatement(query);
+			
+			rs = ps.executeQuery();
+			
+			while(rs.next()) {
+				Product product = new Product();
+				product.setId(rs.getInt("id"));
+				product.setCreation_time(rs.getString("creation_time"));
+				product.setItem(rs.getString("item"));
+				product.setOwner(rs.getString("owner"));
+				product.setPrice(rs.getInt("price"));
+				product.setSold(rs.getInt("sold"));
+				productList.add(product);
+			}
+			return productList;			
+		} catch (SQLException ex) {
+			 plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
+		} finally {
+            try {
+                if (ps != null)
+                    ps.close();
+                if (conn != null)
+                    conn.close();
+            } catch (SQLException ex) {
+                plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
+            }
+        }
+		return null;
+	}
+	
+	//FLAG QUERY_ITEM_ALL_WITHOUT_USER
+	public List<Product> listItemAll(int page, Player user) {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -206,18 +272,20 @@ public abstract class Database {
 		
 		Date timePast = cal.getTime();
 		
+		String userid = user.getUniqueId().toString();
+		
 		String query = 
 				"SELECT * FROM " + product 
-				+" WHERE id NOT IN"
-				+" (SELECT id FROM " + product
+				+" WHERE id"
+				+" NOT IN (SELECT id FROM " + product
 				+" ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
+				+" AND owner != \""+userid+"\""
 				+" AND sold = 0"
 				+" AND creation_time BETWEEN "
 				+"\""+format.format(timePast.getTime())+"\" AND \""+format.format(time.getTime())+"\""
 				+" ORDER BY id DESC LIMIT 45;";
 		
 		//AuctionRecorder.recordAuction("query", query);
-				
 		
 		try {
     	conn = getSQLConnection();
@@ -252,6 +320,7 @@ public abstract class Database {
 	}
 	
 	
+	//FLAG QUERY_ITEM_USER
 	public List<Product> listItemUser(Player player,int page) {
 		Connection conn = null;
 		PreparedStatement ps = null;
@@ -316,7 +385,7 @@ public abstract class Database {
 	
 	
 }
-
+//FLAG QUERY___________________________________________
 
 
 

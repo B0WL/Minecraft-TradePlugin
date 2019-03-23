@@ -10,6 +10,7 @@ import java.util.Locale;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -22,9 +23,12 @@ import util.GUIManager;
 import util.ItemSerializer;
 
 public class MenuInventory {
+
+	// FLAG MENU_MAIN
 	public static int mainBuySlot = 11;
 	public static int mainSellSlot = 13;
 	public static int mainListSlot = 15;
+	public static int mainManagerSlot = 16;
 	public static int mainExitSlot = 26;
 
 	public static void onAuctionMain(Player player) {
@@ -33,10 +37,16 @@ public class MenuInventory {
 		GUIManager.setButton(inventory, Material.DIAMOND_BLOCK, ChatColor.GREEN + "Item Buy", mainBuySlot);
 		GUIManager.setButton(inventory, Material.GOLD_BLOCK, ChatColor.YELLOW + "Item Sell", mainSellSlot);
 		GUIManager.setButton(inventory, Material.BOOK, ChatColor.BLUE + "Trade List", mainListSlot);
+
+		if (player.hasPermission("auction.manager"))
+			GUIManager.setButton(inventory, Material.ANVIL, ChatColor.WHITE + "Management", mainManagerSlot);
+
 		GUIManager.setButton(inventory, Material.BARRIER, ChatColor.RED + "Exit", mainExitSlot);
 
 		player.openInventory(inventory);
 	}
+
+	// FLAG MENU_SELL
 
 	public static int sellItemSlot = 11;
 	public static int sellPriceSlot = 12;
@@ -65,60 +75,61 @@ public class MenuInventory {
 
 	}
 
+	// FLAG MENU_PRICE
 	public static int priceItemSlot = 13;
 	public static int priceConfirmSlot = 26;
+
+	public static int priceDownSlot[] = {10,11,12};
+	public static int priceUpSlot[] = {16,15,14};
 
 	public static void onAuctionPrice(Player player, int price, ItemStack item) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Price : " + String.valueOf(price));
 
-		GUIManager.setButton(inventory, Material.IRON_NUGGET, ChatColor.RED + "Down 1", 10);
-		GUIManager.setButton(inventory, Material.IRON_INGOT, ChatColor.RED + "Down 10", 11);
-		GUIManager.setButton(inventory, Material.IRON_BLOCK, ChatColor.RED + "Down 100", 12);
+		GUIManager.setButton(inventory, Material.IRON_NUGGET, ChatColor.RED + "Down 1", priceDownSlot[0]);
+		GUIManager.setButton(inventory, Material.IRON_INGOT, ChatColor.RED + "Down 10", priceDownSlot[1]);
+		GUIManager.setButton(inventory, Material.IRON_BLOCK, ChatColor.RED + "Down 100", priceDownSlot[2]);
 
 		inventory.setItem(priceItemSlot, item);
 
-		GUIManager.setButton(inventory, Material.GOLD_BLOCK, ChatColor.GREEN + "UP 100", 14);
-		GUIManager.setButton(inventory, Material.GOLD_INGOT, ChatColor.GREEN + "UP 10", 15);
-		GUIManager.setButton(inventory, Material.GOLD_NUGGET, ChatColor.GREEN + "UP 1", 16);
+		GUIManager.setButton(inventory, Material.GOLD_BLOCK, ChatColor.GREEN + "UP 100", priceUpSlot[2]);
+		GUIManager.setButton(inventory, Material.GOLD_INGOT, ChatColor.GREEN + "UP 10", priceUpSlot[1]);
+		GUIManager.setButton(inventory, Material.GOLD_NUGGET, ChatColor.GREEN + "UP 1", priceUpSlot[0]);
 
 		GUIManager.setButton(inventory, Material.SUNFLOWER, ChatColor.GREEN + "Confirm", priceConfirmSlot);
 
 		player.openInventory(inventory);
 	}
 
+	// FLAG MENU_DROP
 	public static int checkItemSlot = 11;
 	public static int checkDropSlot = 15;
 	public static int checkBackSlot = 18;
-	
+
 	public static void onAuctionCheckDrop(Player player, ItemStack item, String price, String id, boolean isDrop) {
 		String name = "";
-		
-		if(item.getItemMeta().hasDisplayName())
+
+		if (item.getItemMeta().hasDisplayName())
 			name = item.getItemMeta().getDisplayName();
 		else
 			name = item.getType().name();
-		
-		
-		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Drop : " +name);
+
+		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Drop : " + name);
 		inventory.setItem(checkItemSlot, item);
-		
+
 		String isDropString = "";
-		if(isDrop) {
+		if (isDrop) {
 			isDropString = "Drop";
-		}else {
+		} else {
 			isDropString = "Delete";
 		}
-		
-		GUIManager.setButton(inventory, Material.TNT, ChatColor.RED+ isDropString+" this item", checkDropSlot);
-		
+
+		GUIManager.setButton(inventory, Material.TNT, ChatColor.RED + isDropString + " this item", checkDropSlot);
+
 		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back", checkBackSlot);
 		player.openInventory(inventory);
 	}
-	
-	
-	
-	
-	
+
+	// FLAG MENU_BUY
 	public static int buyPageBackSlot = 48;
 	public static int buyPageSlot = 49;
 	public static int buyPageNextSlot = 50;
@@ -129,76 +140,42 @@ public class MenuInventory {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Buy");
 		Database DB = Trade.instance.getRDatabase();
 
-		List<Product> productList = DB.listItemAll(page);
-
-		int numb = 0;
-		if (productList != null)
-			if (!productList.isEmpty())
-				for (Product product : productList) {
-					int id = product.getId();
-					int price = product.getPrice();
-					java.util.Date creation_time = null;
-					try {
-						creation_time = Database.format.parse(product.getCreation_time());
-					} catch (ParseException e) {
-						e.printStackTrace();
-					}
-					java.util.Date present_time = new java.util.Date();
-					long diff = present_time.getTime() - creation_time.getTime();
-
-					int period = Trade.instance.getConfig().getInt("Regist_period");
-					String hour = String.valueOf(period - (int)(diff/1000/60/60));
-
-					ItemStack item = ItemSerializer.stringToItem(product.getItem());
-					ItemMeta meta = item.getItemMeta();
-					List<String> lore = new ArrayList<String>();
-
-					if (meta.getLore() != null)
-						lore.addAll(meta.getLore());
-
-					lore.add("-----------------------");
-					lore.add(ChatColor.WHITE +"Remain Hour");
-					lore.add(ChatColor.YELLOW + hour+"hour");
-					lore.add(ChatColor.WHITE +"Price");
-					lore.add(ChatColor.YELLOW +Integer.toString(price));
-					lore.add(ChatColor.BLACK +"Product ID");
-					lore.add(ChatColor.BLACK +Integer.toString(id));
-
-					ItemStack button = item;
-					meta.setLore(lore);
-					button.setItemMeta(meta);
-
-					inventory.setItem(numb, button);
-
-					numb++;
-				}
-
-		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.RED + "Back Page", buyPageBackSlot);
-		GUIManager.setButton(inventory, Material.HEART_OF_THE_SEA, Integer.toString(page), buyPageSlot);
-		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GREEN + "Next Page", buyPageNextSlot);
-
-		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back", buyBackSlot);
-		GUIManager.setButton(inventory, Material.BARRIER, ChatColor.RED + "Exit", buyExitSlot);
-
+		List<Product> productList = DB.listItemAll(page, player);
+		itemList(productList, inventory, page, 0);
 		player.openInventory(inventory);
 	}
-	
-	
-	
-	
-	
+
+	// FLAG MENU_LIST
 	public static void onAuctionList(Player player, int page) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : List");
 		Database DB = Trade.instance.getRDatabase();
 
-		List<Product> productList = DB.listItemUser(player,page);
+		List<Product> productList = DB.listItemUser(player, page);
+		itemList(productList, inventory, page, 1);
+		player.openInventory(inventory);
 
+	}
+
+	// FLAG MENU_MANAGER
+
+	public static void onAuctionManager(Player player, int page) {
+		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Manager");
+		Database DB = Trade.instance.getRDatabase();
+
+		List<Product> productList = DB.listItemAll(page);
+		itemList(productList, inventory, page, 2);
+		player.openInventory(inventory);
+	}
+
+	// FLAG MENU_FUNC_ITEMLIST
+	static void itemList(List<Product> productList, Inventory inventory, int page, int status) {
 		int numb = 0;
 		if (productList != null)
 			if (!productList.isEmpty())
 				for (Product product : productList) {
 					int id = product.getId();
 					int price = product.getPrice();
+					String uuid = product.getOwner();
 					java.util.Date creation_time = null;
 					try {
 						creation_time = Database.format.parse(product.getCreation_time());
@@ -209,38 +186,53 @@ public class MenuInventory {
 					long diff = present_time.getTime() - creation_time.getTime();
 					int period = Trade.instance.getConfig().getInt("Regist_period");
 
-					String hour = String.valueOf(period - (int)(diff/1000/60/60));
+					String hour = String.valueOf(period - (int) (diff / 1000 / 60 / 60));
 
 					ItemStack item = ItemSerializer.stringToItem(product.getItem());
 					ItemMeta meta = item.getItemMeta();
 					List<String> lore = new ArrayList<String>();
 					String sold = "";
-					if(product.getSold() == 1) {
-						sold =ChatColor.YELLOW+ "Sold Out";
-					}else if(Integer.parseInt(hour)<0){
-						sold =ChatColor.RED+ "Failed";
-					}else if(product.getSold() == 0){
-						sold =ChatColor.GREEN+ "On Sale";
-					}else if(product.getSold() ==2) {
-						sold = ChatColor.DARK_RED+"Stop Sale";
-					}else if(product.getSold() ==3) {
-						sold = ChatColor.DARK_RED+"Confiscation";
-					}else {
+					if (product.getSold() == 1) {
+						sold = ChatColor.YELLOW + "Sold Out";
+					}
+					else if (product.getSold() == 0) {
+						if (Integer.parseInt(hour) < 0) {
+							sold = ChatColor.RED + "Failed";
+						} 
+						else {
+							sold = ChatColor.GREEN + "On Sale";
+						}
+					} else if (product.getSold() == 2) {
+						sold = ChatColor.DARK_RED + "Stop Sale";
+					} else {
 						sold = "error";
 					}
 
 					if (meta.getLore() != null)
 						lore.addAll(meta.getLore());
 
-					lore.add(ChatColor.GRAY +"-----------------------");
-					lore.add(ChatColor.WHITE +"Remain Hour");
-					lore.add(ChatColor.YELLOW + hour+"hour");
-					lore.add(ChatColor.WHITE +"Price");
-					lore.add(ChatColor.YELLOW +Integer.toString(price));
-					lore.add(ChatColor.WHITE +"Status");
-					lore.add(sold);
-					lore.add(ChatColor.BLACK +"Product ID");
-					lore.add(ChatColor.BLACK +Integer.toString(id));
+					lore.add(ChatColor.GRAY + "-----------------------");
+					lore.add(ChatColor.WHITE + "Remain Hour");
+					lore.add(ChatColor.YELLOW + hour + "hour");
+					lore.add(ChatColor.WHITE + "Price");
+					lore.add(ChatColor.YELLOW + Integer.toString(price));
+
+					if (status > 0) {
+						lore.add(ChatColor.WHITE + "Status");
+						lore.add(sold);
+						if (status > 1) {
+							lore.add("uuid");
+							lore.add(uuid);
+
+							lore.add(ChatColor.YELLOW + "[SHIFT + LEFT_CLICK]" + ChatColor.WHITE + "BAN TOGGLE");
+
+							lore.add(ChatColor.YELLOW + "[RIGHT_CLICK]" + ChatColor.WHITE + "ITEM BUY");
+							lore.add(ChatColor.YELLOW + "[SHIFT + RIGHT_CLICK]" + ChatColor.WHITE + "ITEM DROP");
+						}
+					}
+
+					lore.add(ChatColor.BLACK + "Product ID");
+					lore.add(ChatColor.BLACK + Integer.toString(id));
 
 					ItemStack button = item;
 					meta.setLore(lore);
@@ -255,33 +247,6 @@ public class MenuInventory {
 		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GREEN + "Next Page", buyPageNextSlot);
 		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back", buyBackSlot);
 		GUIManager.setButton(inventory, Material.BARRIER, ChatColor.RED + "Exit", buyExitSlot);
-
-		player.openInventory(inventory);
-		
 	}
-	
-	
-	
-	
-	
-	
 
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}// FLAG MENU________________________________________

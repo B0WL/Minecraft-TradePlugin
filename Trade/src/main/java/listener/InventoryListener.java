@@ -34,9 +34,11 @@ public class InventoryListener implements Listener {
 	@EventHandler
 	public void onPlayerClickInventory(InventoryClickEvent e) {
 		if (e.getClickedInventory() != null)
-			if (e.getWhoClicked().getOpenInventory().getTopInventory().getHolder() instanceof MenuInventoryHolder)
-				if (e.getCurrentItem().getItemMeta() != null)
-					if (e.getCurrentItem().getItemMeta().getDisplayName() != null) {
+			if (e.getWhoClicked().getOpenInventory().getTopInventory().getHolder() instanceof MenuInventoryHolder) {
+				ItemStack currentItem = e.getCurrentItem();
+
+				if (currentItem.getItemMeta() != null)
+					if (currentItem.getItemMeta().getDisplayName() != null) {
 
 						e.setCancelled(true);
 
@@ -47,25 +49,25 @@ public class InventoryListener implements Listener {
 
 						SoundManager.clickSound(player);
 
-						// TODO Listen_Main
+						// FLAG LISTEN_MAIN
 						if (title.contains("Main"))
-							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {								
+							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 								if (slot == MenuInventory.mainExitSlot) {
 									player.closeInventory();
-								} 
-								else if (slot == MenuInventory.mainSellSlot) {
+								} else if (slot == MenuInventory.mainSellSlot) {
 									MenuInventory.onAuctionSell(player, null, 0);
 								}
 
 								else if (slot == MenuInventory.mainBuySlot) {
 									MenuInventory.onAuctionBuy(player, 1);
-								}
-								else if (slot == MenuInventory.mainListSlot) {
+								} else if (slot == MenuInventory.mainListSlot) {
 									MenuInventory.onAuctionList(player, 1);
+								} else if (slot == MenuInventory.mainManagerSlot) {
+									MenuInventory.onAuctionManager(player, 1);
 								}
 							} ////////////////////// Main ///////////////////////////////////////////
 
-						// TODO Listen_Sell
+						// FLAG LISTEN_SELL
 						if (title.contains("Sell")) {
 							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 								if (slot == MenuInventory.sellBackSlot) {
@@ -90,9 +92,9 @@ public class InventoryListener implements Listener {
 												player.getInventory().removeItem(item);
 												MenuInventory.onAuctionList(player, 1);
 
-												AuctionRecorder.recordAuction("Regist", itemNBT,player,price);
-												AuctionRecorder.messageAuction(player, "registered", itemNBT,price);
-												
+												AuctionRecorder.recordAuction("Regist", itemNBT, player, price);
+												AuctionRecorder.messageAuction(player, "registered", itemNBT, price);
+
 												SoundManager.successSound(player);
 											}
 
@@ -107,12 +109,12 @@ public class InventoryListener implements Listener {
 							}
 
 							else {// 버튼이 아닌경우, 즉 아이템 올리기
-								MenuInventory.onAuctionSell(player, e.getCurrentItem(), Integer.parseInt(
+								MenuInventory.onAuctionSell(player, currentItem, Integer.parseInt(
 										GUIManager.getMenuItem(player, MenuInventory.sellPriceSlot).getItemMeta().getDisplayName()));
 							}
 						} ////////////////////// Sell ////////////////////////////////////////////////////
 
-						// TODO Listen_Price
+						// FLAG LISTEN_PRICE
 						if (title.contains("Price")) {
 							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 								int price = Integer.parseInt(player.getOpenInventory().getTopInventory().getTitle().split(" ")[2]);
@@ -122,167 +124,248 @@ public class InventoryListener implements Listener {
 									MenuInventory.onAuctionSell(player, GUIManager.getMenuItem(player, MenuInventory.priceItemSlot),
 											price);
 
-								} else if (e.getRawSlot() != MenuInventory.priceItemSlot) {// 확인버튼, 아이템이 아니면 파싱
-									String buttonParsedString[] = e.getCurrentItem().getItemMeta().getDisplayName().split(" ");
-									String updownString = buttonParsedString[0];
-									String buttonPriceString = buttonParsedString[1];
+								} else if (e.getRawSlot() != MenuInventory.priceItemSlot) {// 확인버튼, 아이템이 아니면 증감버튼
 
-									if (updownString.contains("UP")) {
-										price += Integer.parseInt(buttonPriceString);
-										MenuInventory.onAuctionPrice(player, price,
-												GUIManager.getMenuItem(player, MenuInventory.priceItemSlot));
-									} else {
-										price -= Integer.parseInt(buttonPriceString);
-										if (price < 0)
-											price = 0;
-										MenuInventory.onAuctionPrice(player, price,
-												GUIManager.getMenuItem(player, MenuInventory.priceItemSlot));
-									}
+									if (slot == MenuInventory.priceUpSlot[0])
+										price += 1;
+									else if (slot == MenuInventory.priceUpSlot[1])
+										price += 10;
+									else if (slot == MenuInventory.priceUpSlot[2])
+										price += 100;
+									else if (slot == MenuInventory.priceDownSlot[0])
+										price -= 1;
+									else if (slot == MenuInventory.priceDownSlot[1])
+										price -= 10;
+									else if (slot == MenuInventory.priceDownSlot[2])
+										price -= 100;
+
+									if (price < 0)
+										price = 0;
+
+									MenuInventory.onAuctionPrice(player, price,
+											GUIManager.getMenuItem(player, MenuInventory.priceItemSlot));
 
 								}
 							}
 						} ////////////////////// Price ///////////////////////////////////////////////
 
-						// TODO Listen_Buy
+						// FLAG LISTEN_BUY
 						if (title.contains("Buy")) {
 							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 								String pageString = GUIManager.getMenuItem(player, MenuInventory.buyPageSlot).getItemMeta()
 										.getDisplayName();
 								int page = Integer.parseInt(pageString);
 
-								if (slot == MenuInventory.buyPageBackSlot || slot == MenuInventory.buyPageNextSlot) {
-									if (slot == MenuInventory.buyPageBackSlot) {
-										if (page != 1) {
-											page--;
-										}
-									} else {
-										if (menu.getItem(44) != null)
-											page++;
-									}
+								if (!itemListButton(player, slot, menu.getItem(44), page)) {// 모든 버튼이 아닌경우 경매장아이템
 
-									MenuInventory.onAuctionBuy(player, page);
-								} else if (slot == MenuInventory.buyBackSlot) {
-									MenuInventory.onAuctionMain(player);
-								} else if (slot == MenuInventory.buyExitSlot) {
-									player.closeInventory();
-								} else if (slot != MenuInventory.buyPageSlot) {// 모든 버튼이 아닌경우 경매장아이템
+									if (db != null) {
+										List<String> lore = currentItem.getItemMeta().getLore();
 
-									if (e.isLeftClick()) {
-										if (db != null) {
-											List<String> lore = e.getCurrentItem().getItemMeta().getLore();
-											String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
-											String price = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.WHITE + "Price") + 1));
-											String item = db.selectItem(id);
-											if (item != null)
-												if (econ.has(player, Double.parseDouble(price))) {
-													if (db.setSold(id, 1) == 1) {
-														MenuInventory.onAuctionBuy(player, page);
-														
-														player.getInventory().addItem(ItemSerializer.stringToItem(item));
-														econ.withdrawPlayer(player, Integer.parseInt(price));
-
-														AuctionRecorder.recordAuction("BUY", item,player,price);
-														AuctionRecorder.messageAuction(player, "bought", item, price);
-														SoundManager.successSound(player);
-													}
-												}else {
-													SoundManager.failedSound(player);	
-													AuctionRecorder.messageAuction(player, "Failed", "Have not enough money.");
-													
-												}
+										if (itemBuy(player, lore)) {
+											MenuInventory.onAuctionBuy(player, page);
+											SoundManager.successSound(player);
+										} else {
+											SoundManager.failedSound(player);
+											AuctionRecorder.messageAuction(player, "Failed", "Have not enough money.");
+											player.closeInventory();
 										}
 									}
+
 								}
 
 							}
 						} ///////////////////////////// BUY //////////////////////////////////////
 
-						// TODO Listen_List
+						// FLAG LISTEN_LIST
 						if (title.contains("List")) {
 							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
+								String pageString = GUIManager.getMenuItem(player, MenuInventory.buyPageSlot).getItemMeta()
+										.getDisplayName();
+								int page = Integer.parseInt(pageString);
 
-								if (slot == MenuInventory.buyPageBackSlot || slot == MenuInventory.buyPageNextSlot) {
-									String pageString = GUIManager.getMenuItem(player, MenuInventory.buyPageSlot).getItemMeta()
-											.getDisplayName();
-									int page = Integer.parseInt(pageString);
+								if (!itemListButton(player, slot, menu.getItem(44), page)) {// 모든 버튼이 아닌경우 경매장아이템
 
-									if (slot == MenuInventory.buyPageBackSlot) {
-										if (page != 1) {
-											page--;
-										}
-									} else {
-										if (menu.getItem(44) != null)
-											page++;
-									}
-
-									MenuInventory.onAuctionList(player, page);
-								} else if (slot == MenuInventory.buyBackSlot) {
-									MenuInventory.onAuctionMain(player);
-								} else if (slot == MenuInventory.buyExitSlot) {
-									player.closeInventory();
-								} else if (slot != MenuInventory.buyPageSlot) {// 모든 버튼이 아닌경우 경매장아이템
-									String pageString = GUIManager.getMenuItem(player, MenuInventory.buyPageSlot).getItemMeta()
-											.getDisplayName();
-									int page = Integer.parseInt(pageString);
+									List<String> lore = currentItem.getItemMeta().getLore();
 
 									if (db != null) {
-										List<String> lore = e.getCurrentItem().getItemMeta().getLore();
-										String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
-										String price = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.WHITE + "Price") + 1));
-										String item = db.selectItem(id);
-
 										String status = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.WHITE + "Status") + 1));
-										if (item != null) {
-											if (status.contains("Sold Out")) {
-												db.deleteItem(id);
-												econ.depositPlayer(player, Double.parseDouble(price));
+										if (status.contains("Sold Out")) {
+											this.itemSaleSuccess(player, lore);
 
-												MenuInventory.onAuctionList(player, page);
+											MenuInventory.onAuctionList(player, page);
+											SoundManager.successSound(player);
 
-												AuctionRecorder.recordAuction("SELL", item,player,price);
-												AuctionRecorder.messageAuction(player, "sold", item, price);
-												SoundManager.successSound(player);
-											} else if (status.contains("Failed")) {
-												db.deleteItem(id);
-												player.getInventory().addItem(ItemSerializer.stringToItem(item));
+										} else if (status.contains("Failed")) {
+											this.itemRecall(player, lore);
 
-												MenuInventory.onAuctionList(player, page);
-												
-												SoundManager.failedSound(player);	
-												AuctionRecorder.messageAuction(player, "Failed", "Time out.");
-											} else if (status.contains("On Sale")) {//판매중인것 제거
-												MenuInventory.onAuctionCheckDrop(player, e.getCurrentItem(), price, id, false);
-											}
+											MenuInventory.onAuctionList(player, page);
+											SoundManager.failedSound(player);
+											AuctionRecorder.messageAuction(player, "Failed", "Time out.");
+										} else if (status.contains("On Sale")) {// 판매중인것 제거
+											this.itemDropMenu(player, lore, currentItem);
 										}
 									}
-
 								}
 							}
 						} ////////////////// List/////////////////////
 
-						// TODO Listen_Drop
+						// FLAG LISTEN_DROP
 						if (title.contains("Drop")) {
 							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
-
 								if (slot == MenuInventory.checkBackSlot) {
 									MenuInventory.onAuctionList(player, 1);
 								} else if (slot == MenuInventory.checkDropSlot) {
 									if (db != null) {
 										List<String> lore = menu.getItem(MenuInventory.checkItemSlot).getItemMeta().getLore();
-										String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
+										this.itemDelete(player, lore);
 
-										String item = db.selectItem(id);
-										if (item != null) {
-											db.deleteItem(id);
-											player.getInventory().addItem(ItemSerializer.stringToItem(item));
-
-											MenuInventory.onAuctionList(player, 1);
-										}
+										MenuInventory.onAuctionList(player, 1);
 									}
 								}
 							}
 						} ///////////// Drop///////////////////
 
+						// FLAG LISTEN_MANAGER
+						if (title.contains("Manager")) {
+							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
+								String pageString = GUIManager.getMenuItem(player, MenuInventory.buyPageSlot).getItemMeta()
+										.getDisplayName();
+								int page = Integer.parseInt(pageString);
+
+								if (!itemListButton(player, slot, menu.getItem(44), page)) {
+									if (db != null) {
+										List<String> lore = currentItem.getItemMeta().getLore();
+
+										if (e.isShiftClick()) {
+											if (e.isLeftClick()) {
+												this.itemToggleBan(player, lore);
+												MenuInventory.onAuctionManager(player, page);
+											}
+
+											if (e.isRightClick()) {
+												this.itemDelete(player, lore);
+												MenuInventory.onAuctionManager(player, page);
+											}
+										} else {
+											if (e.isLeftClick()) {
+											}
+											if (e.isRightClick()) {
+												if(this.itemBuy(player, lore))
+													MenuInventory.onAuctionManager(player, page);
+												else {
+													player.closeInventory();
+												}
+											}
+										}
+
+									}
+								}
+							}
+						} ////////////// Manager/////////////
+
 					}
+			}
+	}// FLAG LISTEN_____________________________
+
+	void itemToggleBan(Player player, List<String> lore) {
+		String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
+		String item = db.selectItem(id);
+		String status = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.WHITE + "Status") + 1));
+
+		if (item != null) {
+			if (!status.contains("Stop Sale"))
+				db.setSold(id, 2);
+			else {
+				db.setSold(id, 0);
+			}
+		}
 	}
+
+	void itemDelete(Player player, List<String> lore) {
+		String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
+
+		String item = db.selectItem(id);
+		if (item != null) {
+			db.deleteItem(id);
+			player.getInventory().addItem(ItemSerializer.stringToItem(item));
+		}
+	}
+
+	void itemRecall(Player player, List<String> lore) {
+		String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
+		String item = db.selectItem(id);
+
+		db.deleteItem(id);
+		player.getInventory().addItem(ItemSerializer.stringToItem(item));
+	}
+
+	void itemDropMenu(Player player, List<String> lore, ItemStack itemStack) {
+		String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
+		String price = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.WHITE + "Price") + 1));
+		String item = db.selectItem(id);
+		if (item != null) {
+			MenuInventory.onAuctionCheckDrop(player, itemStack, price, id, false);
+		} else {
+			SoundManager.failedSound(player);
+			AuctionRecorder.messageAuction(player, "Failed", "It does not exist.");
+			player.closeInventory();
+		}
+	}
+
+	void itemSaleSuccess(Player player, List<String> lore) {
+		String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
+		String price = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.WHITE + "Price") + 1));
+		String item = db.selectItem(id);
+
+		db.deleteItem(id);
+		econ.depositPlayer(player, Double.parseDouble(price));
+
+		AuctionRecorder.recordAuction("SELL", item, player, price);
+		AuctionRecorder.messageAuction(player, "sold", item, price);
+	}
+
+	boolean itemBuy(Player player, List<String> lore) {
+		String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
+		String price = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.WHITE + "Price") + 1));
+		String item = db.selectItem(id);
+
+		if (econ.has(player, Double.parseDouble(price))) {
+			if (db.setSold(id, 1) == 1) {
+				player.getInventory().addItem(ItemSerializer.stringToItem(item));
+				econ.withdrawPlayer(player, Integer.parseInt(price));
+
+				AuctionRecorder.recordAuction("BUY", item, player, price);
+				AuctionRecorder.messageAuction(player, "bought", item, price);
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	boolean itemListButton(Player player, int slot, ItemStack lastItem, int page) {
+		if (slot == MenuInventory.buyPageBackSlot || slot == MenuInventory.buyPageNextSlot) {
+			if (slot == MenuInventory.buyPageBackSlot) {
+				if (page != 1) {
+					page--;
+				}
+			} else {
+				if (lastItem != null)
+					page++;
+			}
+			MenuInventory.onAuctionManager(player, page);
+		} else if (slot == MenuInventory.buyBackSlot) {
+			MenuInventory.onAuctionMain(player);
+		} else if (slot == MenuInventory.buyExitSlot) {
+			player.closeInventory();
+		} else if (slot != MenuInventory.buyPageSlot) {
+			return false;
+		}
+		return true;
+	}
+
 }
+
+// TODO _______________________________

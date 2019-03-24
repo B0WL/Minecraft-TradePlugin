@@ -81,19 +81,22 @@ public class InventoryListener implements Listener {
 								if (slot == MenuInventory.sellRegistSlot) {
 									Database db = Trade.instance.getRDatabase();
 									ItemStack item = GUIManager.getMenuItem(player, MenuInventory.sellItemSlot);
-									String itemNBT = ItemSerializer.itemToString(item);
+									String itemString = ItemSerializer.itemToString(item);
 
 									String price = GUIManager.getMenuItem(player, MenuInventory.sellPriceSlot).getItemMeta()
 											.getDisplayName();
+									
+									String material = item.getType().name();
+									
 
 									if (db != null)
 										if (player.getInventory().contains(item))
-											if (db.registItem(player, itemNBT, price) == 1) {
+											if (db.registItem(player, itemString, price,material) == 1) {
 												player.getInventory().removeItem(item);
 												MenuInventory.onAuctionList(player, 1);
 
-												AuctionRecorder.recordAuction("Regist", itemNBT, player, price);
-												AuctionRecorder.messageAuction(player, "registered", itemNBT, price);
+												AuctionRecorder.recordAuction("Regist", itemString, player, price);
+												AuctionRecorder.messageAuction(player, "registered", itemString, price);
 
 												SoundManager.successSound(player);
 											}
@@ -156,7 +159,7 @@ public class InventoryListener implements Listener {
 										.getDisplayName();
 								int page = Integer.parseInt(pageString);
 
-								if (!itemListButton(player, slot, menu.getItem(44), page)) {// 모든 버튼이 아닌경우 경매장아이템
+								if (!itemListButton(player, slot, page,title, menu.getItem(44))) {// 모든 버튼이 아닌경우 경매장아이템
 
 									if (db != null) {
 										List<String> lore = currentItem.getItemMeta().getLore();
@@ -183,7 +186,7 @@ public class InventoryListener implements Listener {
 										.getDisplayName();
 								int page = Integer.parseInt(pageString);
 
-								if (!itemListButton(player, slot, menu.getItem(44), page)) {// 모든 버튼이 아닌경우 경매장아이템
+								if (!itemListButton(player, slot, page,title, menu.getItem(44))) {// 모든 버튼이 아닌경우 경매장아이템
 
 									List<String> lore = currentItem.getItemMeta().getLore();
 
@@ -232,7 +235,7 @@ public class InventoryListener implements Listener {
 										.getDisplayName();
 								int page = Integer.parseInt(pageString);
 
-								if (!itemListButton(player, slot, menu.getItem(44), page)) {
+								if (!itemListButton(player, slot, page,title, menu.getItem(44))) {
 									if (db != null) {
 										List<String> lore = currentItem.getItemMeta().getLore();
 
@@ -274,9 +277,9 @@ public class InventoryListener implements Listener {
 
 		if (item != null) {
 			if (!status.contains("Stop Sale"))
-				db.setSold(id, 2);
+				db.setStatus(id, 2);
 			else {
-				db.setSold(id, 0);
+				db.setStatus(id, 0);
 			}
 		}
 	}
@@ -330,7 +333,7 @@ public class InventoryListener implements Listener {
 		String item = db.selectItem(id);
 
 		if (econ.has(player, Double.parseDouble(price))) {
-			if (db.setSold(id, 1) == 1) {
+			if (db.setStatus(id, 1) == 1) {
 				player.getInventory().addItem(ItemSerializer.stringToItem(item));
 				econ.withdrawPlayer(player, Integer.parseInt(price));
 
@@ -345,7 +348,7 @@ public class InventoryListener implements Listener {
 		}
 	}
 
-	boolean itemListButton(Player player, int slot, ItemStack lastItem, int page) {
+	boolean itemListButton(Player player, int slot, int page,String title,ItemStack lastItem) {
 		if (slot == MenuInventory.buyPageBackSlot || slot == MenuInventory.buyPageNextSlot) {
 			if (slot == MenuInventory.buyPageBackSlot) {
 				if (page != 1) {
@@ -355,7 +358,11 @@ public class InventoryListener implements Listener {
 				if (lastItem != null)
 					page++;
 			}
-			MenuInventory.onAuctionManager(player, page);
+			if(title.contains("List"))
+				MenuInventory.onAuctionList(player, page);
+			else if(title.contains("Manager"))
+				MenuInventory.onAuctionManager(player, page);
+				
 		} else if (slot == MenuInventory.buyBackSlot) {
 			MenuInventory.onAuctionMain(player);
 		} else if (slot == MenuInventory.buyExitSlot) {

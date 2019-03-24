@@ -9,6 +9,7 @@ import database.Database;
 import database.SQLite;
 import intenrnal.MenuInventory;
 import listener.InventoryListener;
+import listener.PlayerListener;
 import net.milkbowl.vault.economy.Economy;
 
 public class Trade extends JavaPlugin {
@@ -46,6 +47,14 @@ public class Trade extends JavaPlugin {
 			getLogger().info("Inventory Listen Failed");
 			getServer().getPluginManager().disablePlugin(this);
 		}
+		
+		try {
+			getServer().getPluginManager().registerEvents(new PlayerListener(), this);
+		} catch (Exception e) {
+			getLogger().info("Player Listen Failed");
+			getServer().getPluginManager().disablePlugin(this);
+		}
+		
 		try {
 			this.getCommand("Auction").setExecutor(new CommandManager());
 			this.getCommand("test").setExecutor(new CommandManager());

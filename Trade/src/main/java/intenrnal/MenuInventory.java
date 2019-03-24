@@ -141,7 +141,7 @@ public class MenuInventory {
 		Database DB = Trade.instance.getRDatabase();
 
 		List<Product> productList = DB.listItemAll(page, player);
-		itemList(productList, inventory, page, 0);
+		itemList(productList, inventory, page, 0,DB);
 		player.openInventory(inventory);
 	}
 
@@ -151,7 +151,7 @@ public class MenuInventory {
 		Database DB = Trade.instance.getRDatabase();
 
 		List<Product> productList = DB.listItemUser(player, page);
-		itemList(productList, inventory, page, 1);
+		itemList(productList, inventory, page, 1,DB);
 		player.openInventory(inventory);
 
 	}
@@ -163,19 +163,19 @@ public class MenuInventory {
 		Database DB = Trade.instance.getRDatabase();
 
 		List<Product> productList = DB.listItemAll(page);
-		itemList(productList, inventory, page, 2);
+		itemList(productList, inventory, page, 2,DB);
 		player.openInventory(inventory);
 	}
 
 	// FLAG MENU_FUNC_ITEMLIST
-	static void itemList(List<Product> productList, Inventory inventory, int page, int status) {
+	static void itemList(List<Product> productList, Inventory inventory, int page, int status, Database DB) {
 		int numb = 0;
 		if (productList != null)
 			if (!productList.isEmpty())
 				for (Product product : productList) {
 					int id = product.getId();
 					int price = product.getPrice();
-					String uuid = product.getOwner();
+					
 					java.util.Date creation_time = null;
 					try {
 						creation_time = Database.format.parse(product.getCreation_time());
@@ -192,17 +192,17 @@ public class MenuInventory {
 					ItemMeta meta = item.getItemMeta();
 					List<String> lore = new ArrayList<String>();
 					String sold = "";
-					if (product.getSold() == 1) {
+					if (product.getStatus() == 1) {
 						sold = ChatColor.YELLOW + "Sold Out";
 					}
-					else if (product.getSold() == 0) {
+					else if (product.getStatus() == 0) {
 						if (Integer.parseInt(hour) < 0) {
 							sold = ChatColor.RED + "Failed";
 						} 
 						else {
 							sold = ChatColor.GREEN + "On Sale";
 						}
-					} else if (product.getSold() == 2) {
+					} else if (product.getStatus() == 2) {
 						sold = ChatColor.DARK_RED + "Stop Sale";
 					} else {
 						sold = "error";
@@ -221,8 +221,11 @@ public class MenuInventory {
 						lore.add(ChatColor.WHITE + "Status");
 						lore.add(sold);
 						if (status > 1) {
-							lore.add("uuid");
-							lore.add(uuid);
+							String uuid = product.getUUID();
+							String name = DB.getDisplayName(uuid);
+							
+							lore.add("owner");
+							lore.add(name);
 
 							lore.add(ChatColor.YELLOW + "[SHIFT + LEFT_CLICK]" + ChatColor.WHITE + "BAN TOGGLE");
 

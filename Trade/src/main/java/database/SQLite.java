@@ -17,15 +17,26 @@ public class SQLite extends Database{
         dbname = plugin.getConfig().getString("SQLite.Filename", "Auction"); // Set the table name here e.g player_kills
     }
 
-    public String SQLiteCreateProductTable = 
+    public String ProductTable = 
     		"CREATE TABLE IF NOT EXISTS Product (" +
-            "`id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
-            "`creation_time` DATETIME NOT NULL,"+
-            "`sold` INTEGER DEFAULT 0,"+//0 = 판매중/판매실패(기간이 지났을경우) , 1 = 판매완료, 2 = 판매중지
-            "`owner` TEXT NOT NULL,"+
-            "`item` TEXT NOT NULL,"+
-            "`price` INTEGER NOT NULL"+
+            "`id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT" +
+            ",`creation_time` DATETIME NOT NULL"+
+            ",`status` INTEGER DEFAULT 0"+//0 = 판매중/판매실패(기간이 지났을경우) , 1 = 판매완료, 2 = 판매중지
+            ",`uuid` TEXT NOT NULL"+
+            ",`item` TEXT NOT NULL"+
+            ",`price` INTEGER NOT NULL"+
+            ",`material` TEXT NOT NULL"+
             ");";
+    public String UserTable=
+    		"CREATE TABLE IF NOT EXISTS User ("+    
+    				"`uuid` TEXT NOT NULL PRIMARY KEY"+
+    				",`name` TEXT NOT NULL"+
+    				");";
+    				
+    
+    
+    
+    
     
     // SQL creation stuff, You can leave the blow stuff untouched.
     public Connection getSQLConnection() {
@@ -56,8 +67,9 @@ public class SQLite extends Database{
         connection = getSQLConnection();
         try {
             Statement s = connection.createStatement();
-            
-            s.executeUpdate(SQLiteCreateProductTable);
+
+            s.executeUpdate(ProductTable);
+            s.executeUpdate(UserTable);
             s.close();
         } catch (SQLException e) {
             e.printStackTrace();

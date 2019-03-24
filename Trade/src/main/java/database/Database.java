@@ -22,56 +22,118 @@ import util.AuctionRecorder;
 public abstract class Database {
 	Trade plugin;
 	Connection connection;
-	public String product = "Product";
 	public int tokens = 0;
 
-	public static SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",Locale.KOREA);
+	public static SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA);
 
 	public Database(Trade instance) {
 		plugin = instance;
 	}
+
 	public abstract Connection getSQLConnection();
+
 	public abstract void load();
-	
-	
 
 	public void initialize() {
 		connection = getSQLConnection();
 		try {
-			PreparedStatement ps = connection.prepareStatement("SELECT * FROM " + product + " WHERE id = ?");
+			PreparedStatement ps = connection.prepareStatement("SELECT * FROM Product WHERE id = ?");
 			ps.setString(1, "");
 			ResultSet rs = ps.executeQuery();
 			close(ps, rs);
-
 		} catch (SQLException ex) {
 			plugin.getLogger().log(Level.SEVERE, "Unable to retreive connection", ex);
 		}
 	}
 	
-	
+	public String getDisplayName(String uuid) {
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
 
-	//FLAG QUERY_REGI_ITEM
-	public int registItem(Player player, String item, String price) {// 1= success 0= fail
-		String playerID = player.getUniqueId().toString();
-		int priceInt = Integer.parseInt(price);
-	    Date creationDate = new Date();
-	    String creationStirng = format.format(creationDate);
-	    
+		String query = 
+				"SELECT name FROM User WHERE uuid = ?;";
+		AuctionRecorder.recordAuction("query", query);
+
+		try {
+			conn = getSQLConnection();
+			
+			ps = conn.prepareStatement(query);
+			ps.setString(1, uuid);
+			
+			rs = ps.executeQuery();
+			
+			return rs.getString("name");
+		} catch (SQLException ex) {
+			plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
+		} finally {
+			try {
+				if (ps != null)
+					ps.close();
+				if (conn != null)
+					conn.close();
+			} catch (SQLException ex) {
+				plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
+			}
+		}
+		return null;
+	}
+	
+	public void registPlayer(Player player) {
+		String id = player.getUniqueId().toString();
+		String name = player.getDisplayName();
 
 		Connection conn = null;
 		PreparedStatement ps = null;
-		String query = 
-				"INSERT INTO " + product 
-				+ " (owner,item,price,creation_time) VALUES(?,?,?,"+"\""+creationStirng+"\""+")";
+		String query =
+				"INSERT OR REPLACE INTO User (uuid,name) VALUES(?,?);";
 		
 		try {
 			conn = getSQLConnection();
 			ps = conn.prepareStatement(query);
-			
+
+			ps.setString(1, id);
+			ps.setString(2, name);
+
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (ps != null)
+					ps.close();
+				if (conn != null)
+					conn.close();
+			} catch (SQLException ex) {
+				plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
+			}
+		}
+	}
+	
+	
+	// FLAG QUERY_REGI_ITEM
+	public int registItem(Player player, String item, String price, String material) {// 1= success 0= fail
+		String playerID = player.getUniqueId().toString();
+		int priceInt = Integer.parseInt(price);
+		Date creationDate = new Date();
+		String creationStirng = format.format(creationDate);
+
+		Connection conn = null;
+		PreparedStatement ps = null;
+		String query = 
+				"INSERT INTO Product (uuid,item,price,material,creation_time) VALUES(?,?,?,?,?)";
+		AuctionRecorder.recordAuction("query", query);
+
+		try {
+			conn = getSQLConnection();
+			ps = conn.prepareStatement(query);
+
 			ps.setString(1, playerID);
 			ps.setString(2, item);
 			ps.setInt(3, priceInt);
-			
+			ps.setString(4, material);
+			ps.setString(5, creationStirng);
+
 			ps.executeUpdate();
 			return 1;
 		} catch (SQLException e) {
@@ -89,65 +151,59 @@ public abstract class Database {
 		return 0;
 	}
 	
-	
-	//FLAG QUERY_SELE_ITEM
+	// FLAG QUERY_SELE_ITEM
 	public String selectItem(String id) {
 		Connection conn = null;
 		PreparedStatement ps = null;
-		ResultSet rs =null;
-		
+		ResultSet rs = null;
+
 		String query = 
-				"SELECT item FROM "+product
-				+" WHERE id = "+id
-				+";";
+				"SELECT item FROM Product WHERE id = ?;";
 		AuctionRecorder.recordAuction("query", query);
-		
+
 		try {
-			conn= getSQLConnection();
-			ps =conn.prepareStatement(query);
+			conn = getSQLConnection();
+			
+			ps = conn.prepareStatement(query);
+			ps.setString(1, id);
+			
 			rs = ps.executeQuery();
-			
-			while(rs.next()) {
-				return rs.getString("item");
-			}
-			
+
+			return rs.getString("item");
 		} catch (SQLException ex) {
-			 plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
+			plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
 		} finally {
-           try {
-               if (ps != null)
-                   ps.close();
-               if (conn != null)
-                   conn.close();
-           } catch (SQLException ex) {
-               plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
-           }
-       }
+			try {
+				if (ps != null)
+					ps.close();
+				if (conn != null)
+					conn.close();
+			} catch (SQLException ex) {
+				plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
+			}
+		}
 		return null;
 	}
-	
-	
-	//FLAG QUERY_SET_SOLD
-	public int setSold(String id, int sold) {
+
+	// FLAG QUERY_SET_STATUS
+	public int setStatus(String id, int status) {
 		Connection conn = null;
 		PreparedStatement ps = null;
-		
+
 		String query = 
-				"UPDATE "+product+
-				" SET sold = "+String.valueOf(sold)
-				+" WHERE id = "+id
-				+";";
-		
+				"UPDATE Product SET status = ? WHERE id = ?;";
 		AuctionRecorder.recordAuction("query", query);
-		
+
 		try {
 			conn = getSQLConnection();
 			ps = conn.prepareStatement(query);
-			
+			ps.setString(1, String.valueOf(status));
+			ps.setString(2, String.valueOf(status));
+
 			ps.executeUpdate();
-			
+
 			return 1;
-		}catch (SQLException e) {
+		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
 			try {
@@ -160,30 +216,28 @@ public abstract class Database {
 			}
 		}
 		return 0;
-		
-		
+
 	}
 
-
-	
-	//FLAG QUERY_DELE_ITEM
+	// FLAG QUERY_DELE_ITEM
 	public int deleteItem(String id) {
 		Connection conn = null;
 		PreparedStatement ps = null;
-		
+
 		String query = 
-				"DELETE FROM "+product
-				+" WHERE id = "+id
-				+";";
+				"DELETE FROM Product WHERE id = ?;";
+
+		AuctionRecorder.recordAuction("query", query);
 		
 		try {
 			conn = getSQLConnection();
 			ps = conn.prepareStatement(query);
-			
+			ps.setString(1, id);
+
 			ps.executeUpdate();
-			
+
 			return 1;
-		}catch (SQLException e) {
+		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
 			try {
@@ -203,172 +257,66 @@ public abstract class Database {
 
 	//FLAG QUERY_ITEM_ALL
 	public List<Product> listItemAll(int page) {
-		Connection conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		
-		List<Product> productList = new ArrayList<Product>();
 		int selectColumn = (page-1)*45-1;
 		if(selectColumn<0) selectColumn=0;
 		
-		
 		String query = 
-				"SELECT * FROM " + product 
-				+" WHERE id NOT IN"
-				+" (SELECT id FROM " + product
-				+" ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
+				"SELECT * FROM Product WHERE id NOT IN"
+				+" (SELECT id FROM Product ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
 				+" ORDER BY id DESC LIMIT 45;";
-		
-		//AuctionRecorder.recordAuction("query", query);
-		
-		try {
-    	conn = getSQLConnection();
-			ps = conn.prepareStatement(query);
-			
-			rs = ps.executeQuery();
-			
-			while(rs.next()) {
-				Product product = new Product();
-				product.setId(rs.getInt("id"));
-				product.setCreation_time(rs.getString("creation_time"));
-				product.setItem(rs.getString("item"));
-				product.setOwner(rs.getString("owner"));
-				product.setPrice(rs.getInt("price"));
-				product.setSold(rs.getInt("sold"));
-				productList.add(product);
-			}
-			return productList;			
-		} catch (SQLException ex) {
-			 plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
-		} finally {
-            try {
-                if (ps != null)
-                    ps.close();
-                if (conn != null)
-                    conn.close();
-            } catch (SQLException ex) {
-                plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
-            }
-        }
-		return null;
+
+		AuctionRecorder.recordAuction("query", query);
+
+		return queryToProduct(query);
 	}
 	
 	//FLAG QUERY_ITEM_ALL_WITHOUT_USER
 	public List<Product> listItemAll(int page, Player user) {
-		Connection conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		
-		List<Product> productList = new ArrayList<Product>();
-		int selectColumn = (page-1)*45-1;
-		if(selectColumn<0) selectColumn=0;
-		
+		int selectColumn = (page - 1) * 45 - 1;
+		if (selectColumn < 0)
+			selectColumn = 0;
+
 		Date time = new Date();
 		int period = Trade.instance.getConfig().getInt("Regist_period");
-		
+
 		Calendar cal = Calendar.getInstance();
 		cal.setTime(time);
 		cal.add(Calendar.HOUR, -period);
-		
+
 		Date timePast = cal.getTime();
-		
+
 		String userid = user.getUniqueId().toString();
 		
 		String query = 
-				"SELECT * FROM " + product 
-				+" WHERE id"
-				+" NOT IN (SELECT id FROM " + product
-				+" ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
-				+" AND owner != \""+userid+"\""
-				+" AND sold = 0"
+				"SELECT * FROM Product WHERE id"
+				+" NOT IN (SELECT id FROM Product ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
+				+" AND uuid != \""+userid+"\""
+				+" AND status = 0"
 				+" AND creation_time BETWEEN "
 				+"\""+format.format(timePast.getTime())+"\" AND \""+format.format(time.getTime())+"\""
 				+" ORDER BY id DESC LIMIT 45;";
 		
-		//AuctionRecorder.recordAuction("query", query);
-		
-		try {
-    	conn = getSQLConnection();
-			ps = conn.prepareStatement(query);
-			
-			rs = ps.executeQuery();
-			
-			while(rs.next()) {
-				Product product = new Product();
-				product.setId(rs.getInt("id"));
-				product.setCreation_time(rs.getString("creation_time"));
-				product.setItem(rs.getString("item"));
-				product.setOwner(rs.getString("owner"));
-				product.setPrice(rs.getInt("price"));
-				product.setSold(rs.getInt("sold"));
-				productList.add(product);
-			}
-			return productList;			
-		} catch (SQLException ex) {
-			 plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
-		} finally {
-            try {
-                if (ps != null)
-                    ps.close();
-                if (conn != null)
-                    conn.close();
-            } catch (SQLException ex) {
-                plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
-            }
-        }
-		return null;
+		AuctionRecorder.recordAuction("query", query);
+
+		return queryToProduct(query);
 	}
-	
 	
 	//FLAG QUERY_ITEM_USER
 	public List<Product> listItemUser(Player player,int page) {
-		Connection conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		
-		List<Product> productList = new ArrayList<Product>();
 		int selectColumn = (page-1)*45-1;
 		if(selectColumn<0) selectColumn=0;		
 		
 		String id = player.getUniqueId().toString();
 		
 		String query = 
-				"SELECT * FROM " + product 
-				+" WHERE id NOT IN"
-				+" (SELECT id FROM " + product
-				+" ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
-				+" AND owner = \""+ id + "\""
+				"SELECT * FROM Product WHERE id NOT IN"
+				+" (SELECT id FROM Product ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
+				+" AND uuid = \""+ id + "\""
 				+" ORDER BY id DESC LIMIT 45;";
-				
-        try {
-    		conn = getSQLConnection();
-			ps = conn.prepareStatement(query);
-			rs = ps.executeQuery();
-			
-			while(rs.next()) {
-				Product product = new Product();
-				product.setId(rs.getInt("id"));
-				product.setCreation_time(rs.getString("creation_time"));
-				product.setItem(rs.getString("item"));
-				product.setOwner(rs.getString("owner"));
-				product.setPrice(rs.getInt("price"));
-				product.setSold(rs.getInt("sold"));
-				productList.add(product);
-			}
-			return productList;			
-		} catch (SQLException ex) {
-			 plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
-		} finally {
-            try {
-                if (ps != null)
-                    ps.close();
-                if (conn != null)
-                    conn.close();
-            } catch (SQLException ex) {
-                plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
-            }
-        }
-		return null;
+
+		AuctionRecorder.recordAuction("query", query);
+		
+		return queryToProduct(query);
 	}
 
 	public void close(PreparedStatement ps, ResultSet rs) {
@@ -380,12 +328,49 @@ public abstract class Database {
 		} catch (SQLException ex) {
 			Error.close(plugin, ex);
 		}
+	}// FLAG QUERY___________________________________________
+	
+	List<Product> queryToProduct(String query) {
+		List<Product> productList = new ArrayList<Product>();
+
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try {
+			conn = getSQLConnection();
+			ps = conn.prepareStatement(query);
+			rs = ps.executeQuery();
+
+			while (rs.next()) {
+				Product product = new Product();
+				product.setId(rs.getInt("id"));
+				product.setCreation_time(rs.getString("creation_time"));
+				product.setItem(rs.getString("item"));
+				product.setUUID(rs.getString("uuid"));
+				product.setPrice(rs.getInt("price"));
+				product.setStatus(rs.getInt("status"));
+				product.setMaterial(rs.getString("material"));
+				productList.add(product);
+			}
+			return productList;
+		} catch (SQLException ex) {
+			plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
+		} finally {
+			try {
+				if (ps != null)
+					ps.close();
+				if (conn != null)
+					conn.close();
+			} catch (SQLException ex) {
+				plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
+			}
+		}
+		return null;
 	}
 	
-	
-	
 }
-//FLAG QUERY___________________________________________
+
+
 
 
 

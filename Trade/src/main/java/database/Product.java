@@ -26,25 +26,32 @@ public class Product {
 	public void setItem(String item) {
 		this.item = item;
 	}
-	public String getOwner() {
-		return owner;
+	public String getUUID() {
+		return UUID;
 	}
-	public void setOwner(String owner) {
-		this.owner = owner;
+	public void setUUID(String UUID) {
+		this.UUID = UUID;
 	}
-	public int getSold() {
-		return sold;
+	public int getStatus() {
+		return status;
 	}
-	public void setSold(int sold) {
-		this.sold = sold;
+	public void setStatus(int status) {
+		this.status = status;
 	}
-	
+	public void setMaterial(String material) {
+		this.material = material;
+	}
+	public String getMaterial() {
+		return material;
+	}
 	
 	private int id;
 	private String creation_time;
 
-	private int sold;
+	private int status;
 	private int price;
 	private String item;
-	private String owner;
+	private String UUID;
+	
+	private String material;
 }

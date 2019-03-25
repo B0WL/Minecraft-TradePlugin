@@ -1,16 +1,12 @@
 package intenrnal;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -79,8 +75,8 @@ public class MenuInventory {
 	public static int priceItemSlot = 13;
 	public static int priceConfirmSlot = 26;
 
-	public static int priceDownSlot[] = {10,11,12};
-	public static int priceUpSlot[] = {16,15,14};
+	public static int priceDownSlot[] = { 10, 11, 12 };
+	public static int priceUpSlot[] = { 16, 15, 14 };
 
 	public static void onAuctionPrice(Player player, int price, ItemStack item) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Price : " + String.valueOf(price));
@@ -141,17 +137,21 @@ public class MenuInventory {
 		Database DB = Trade.instance.getRDatabase();
 
 		List<Product> productList = DB.listItemAll(page, player);
-		itemList(productList, inventory, page, 0,DB);
+		itemList(productList, inventory, page, 0, DB);
 		player.openInventory(inventory);
 	}
 
 	// FLAG MENU_LIST
 	public static void onAuctionList(Player player, int page) {
-		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : List");
 		Database DB = Trade.instance.getRDatabase();
+		int regiNumb = Trade.instance.getConfig().getInt("register_number");
+		int haveNumb = DB.getProductCount(player);
+
+		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54,
+				String.format("Auction : List [%d/%d]", haveNumb, regiNumb));
 
 		List<Product> productList = DB.listItemUser(player, page);
-		itemList(productList, inventory, page, 1,DB);
+		itemList(productList, inventory, page, 1, DB);
 		player.openInventory(inventory);
 
 	}
@@ -163,7 +163,7 @@ public class MenuInventory {
 		Database DB = Trade.instance.getRDatabase();
 
 		List<Product> productList = DB.listItemAll(page);
-		itemList(productList, inventory, page, 2,DB);
+		itemList(productList, inventory, page, 2, DB);
 		player.openInventory(inventory);
 	}
 
@@ -175,7 +175,7 @@ public class MenuInventory {
 				for (Product product : productList) {
 					int id = product.getId();
 					int price = product.getPrice();
-					
+
 					java.util.Date creation_time = null;
 					try {
 						creation_time = Database.format.parse(product.getCreation_time());
@@ -184,9 +184,13 @@ public class MenuInventory {
 					}
 					java.util.Date present_time = new java.util.Date();
 					long diff = present_time.getTime() - creation_time.getTime();
-					int period = Trade.instance.getConfig().getInt("Regist_period");
 
-					String hour = String.valueOf(period - (int) (diff / 1000 / 60 / 60));
+					float period = Trade.instance.getConfig().getInt("regist_period");
+					float wait_minute = Trade.instance.getConfig().getInt("wait_time");
+
+					float remain_second = (period) * 60 * 60 + wait_minute * 60 - (diff / 1000);
+					float remain_minute = (remain_second / 60);
+					float remain_hour = (remain_minute / 60);
 
 					ItemStack item = ItemSerializer.stringToItem(product.getItem());
 					ItemMeta meta = item.getItemMeta();
@@ -194,12 +198,12 @@ public class MenuInventory {
 					String sold = "";
 					if (product.getStatus() == 1) {
 						sold = ChatColor.YELLOW + "Sold Out";
-					}
-					else if (product.getStatus() == 0) {
-						if (Integer.parseInt(hour) < 0) {
+					} else if (product.getStatus() == 0) {
+						if ((remain_second) < 0) {
 							sold = ChatColor.RED + "Failed";
-						} 
-						else {
+						} else if ((remain_second) > (period) * 60 * 60) {
+							sold = ChatColor.YELLOW + "Waiting";
+						} else {
 							sold = ChatColor.GREEN + "On Sale";
 						}
 					} else if (product.getStatus() == 2) {
@@ -213,7 +217,7 @@ public class MenuInventory {
 
 					lore.add(ChatColor.GRAY + "-----------------------");
 					lore.add(ChatColor.WHITE + "Remain Hour");
-					lore.add(ChatColor.YELLOW + hour + "hour");
+					lore.add(ChatColor.YELLOW + String.format("%dH %dM", (int) remain_hour, (int) remain_minute % 60));
 					lore.add(ChatColor.WHITE + "Price");
 					lore.add(ChatColor.YELLOW + Integer.toString(price));
 
@@ -223,12 +227,10 @@ public class MenuInventory {
 						if (status > 1) {
 							String uuid = product.getUUID();
 							String name = DB.getDisplayName(uuid);
-							
 							lore.add("owner");
 							lore.add(name);
 
 							lore.add(ChatColor.YELLOW + "[SHIFT + LEFT_CLICK]" + ChatColor.WHITE + "BAN TOGGLE");
-
 							lore.add(ChatColor.YELLOW + "[RIGHT_CLICK]" + ChatColor.WHITE + "ITEM BUY");
 							lore.add(ChatColor.YELLOW + "[SHIFT + RIGHT_CLICK]" + ChatColor.WHITE + "ITEM DROP");
 						}

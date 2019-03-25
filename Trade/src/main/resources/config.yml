@@ -1,6 +1,8 @@
 
 
 #경매장에 물품이 게시되는 기간
-Regist_period: 72
-#대기시간
-Wait_time: 1
+regist_period: 72
+#대기시간 (분)
+wait_time: 30
+#등록 수
+register_number: 10

@@ -3,10 +3,12 @@ package intenrnal;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -132,12 +134,16 @@ public class MenuInventory {
 	public static int buyBackSlot = 45;
 	public static int buyExitSlot = 53;
 
+	public static int buyFindSlot = 51;
+
 	public static void onAuctionBuy(Player player, int page) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Buy");
 		Database DB = Trade.instance.getRDatabase();
 
 		List<Product> productList = DB.listItemAll(page, player);
 		itemList(productList, inventory, page, 0, DB);
+		GUIManager.setButton(inventory, Material.ENDER_PEARL, "FIND ITEM", buyFindSlot);
+
 		player.openInventory(inventory);
 	}
 
@@ -167,83 +173,118 @@ public class MenuInventory {
 		player.openInventory(inventory);
 	}
 
-	// FLAG MENU_FUNC_ITEMLIST
+	// FLAG MENU_FIND
+	public static void onAuctionFind(Player player, int page) {
+		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Find");
+		Database DB = Trade.instance.getRDatabase();
+
+		List<Product> productList = DB.listItemGroupMaterial(page, player);
+		itemList(productList, inventory, page, -1, DB);
+		player.openInventory(inventory);
+	}
+	
+	//FLAG MENU_BUY_MAT
+	public static void onAuctionBuyMaterial(Player player, int page, String material) {
+		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Buy - "+material);
+		Database DB = Trade.instance.getRDatabase();
+
+		List<Product> productList = DB.listItemAll(page, player,material);
+		
+		itemList(productList, inventory, page, 0, DB);
+		GUIManager.setButton(inventory, Material.ENDER_PEARL, "FIND ITEM", buyFindSlot);
+		player.openInventory(inventory);
+	}
+	
 	static void itemList(List<Product> productList, Inventory inventory, int page, int status, Database DB) {
 		int numb = 0;
 		if (productList != null)
 			if (!productList.isEmpty())
 				for (Product product : productList) {
-					int id = product.getId();
-					int price = product.getPrice();
 
-					java.util.Date creation_time = null;
-					try {
-						creation_time = Database.format.parse(product.getCreation_time());
-					} catch (ParseException e) {
-						e.printStackTrace();
-					}
-					java.util.Date present_time = new java.util.Date();
-					long diff = present_time.getTime() - creation_time.getTime();
+					if (status > -1) {
+						int id = product.getId();
+						int price = product.getPrice();
 
-					float period = Trade.instance.getConfig().getInt("regist_period");
-					float wait_minute = Trade.instance.getConfig().getInt("wait_time");
+						java.util.Date creation_time = null;
+						try {
+							creation_time = Database.format.parse(product.getCreation_time());
+						} catch (ParseException e) {
+							e.printStackTrace();
+						}
+						java.util.Date present_time = new java.util.Date();
+						long diff = present_time.getTime() - creation_time.getTime();
 
-					float remain_second = (period) * 60 * 60 + wait_minute * 60 - (diff / 1000);
-					float remain_minute = (remain_second / 60);
-					float remain_hour = (remain_minute / 60);
+						float period = Trade.instance.getConfig().getInt("regist_period");
+						float wait_minute = Trade.instance.getConfig().getInt("wait_time");
 
-					ItemStack item = ItemSerializer.stringToItem(product.getItem());
-					ItemMeta meta = item.getItemMeta();
-					List<String> lore = new ArrayList<String>();
-					String sold = "";
-					if (product.getStatus() == 1) {
-						sold = ChatColor.YELLOW + "Sold Out";
-					} else if (product.getStatus() == 0) {
-						if ((remain_second) < 0) {
-							sold = ChatColor.RED + "Failed";
-						} else if ((remain_second) > (period) * 60 * 60) {
-							sold = ChatColor.YELLOW + "Waiting";
+						float remain_second = (period) * 60 * 60 + wait_minute * 60 - (diff / 1000);
+						float remain_minute = (remain_second / 60);
+						float remain_hour = (remain_minute / 60);
+
+						ItemStack item = ItemSerializer.stringToItem(product.getItem());
+						ItemMeta meta = item.getItemMeta();
+						List<String> lore = new ArrayList<String>();
+						String sold = "";
+						if (product.getStatus() == 1) {
+							sold = ChatColor.YELLOW + "Sold Out";
+						} else if (product.getStatus() == 0) {
+							if ((remain_second) < 0) {
+								sold = ChatColor.RED + "Failed";
+							} else if ((remain_second) > (period) * 60 * 60) {
+								sold = ChatColor.YELLOW + "Waiting";
+							} else {
+								sold = ChatColor.GREEN + "On Sale";
+							}
+						} else if (product.getStatus() == 2) {
+							sold = ChatColor.DARK_RED + "Stop Sale";
 						} else {
-							sold = ChatColor.GREEN + "On Sale";
+							sold = "error";
 						}
-					} else if (product.getStatus() == 2) {
-						sold = ChatColor.DARK_RED + "Stop Sale";
-					} else {
-						sold = "error";
-					}
 
-					if (meta.getLore() != null)
-						lore.addAll(meta.getLore());
+						if (meta.getLore() != null)
+							lore.addAll(meta.getLore());
 
-					lore.add(ChatColor.GRAY + "-----------------------");
-					lore.add(ChatColor.WHITE + "Remain Hour");
-					lore.add(ChatColor.YELLOW + String.format("%dH %dM", (int) remain_hour, (int) remain_minute % 60));
-					lore.add(ChatColor.WHITE + "Price");
-					lore.add(ChatColor.YELLOW + Integer.toString(price));
+						lore.add(ChatColor.GRAY + "-----------------------");
+						lore.add(ChatColor.WHITE + "Remain Hour");
+						lore.add(ChatColor.YELLOW + String.format("%dH %dM", (int) remain_hour, (int) remain_minute % 60));
+						lore.add(ChatColor.WHITE + "Price");
+						lore.add(ChatColor.YELLOW + Integer.toString(price));
 
-					if (status > 0) {
-						lore.add(ChatColor.WHITE + "Status");
-						lore.add(sold);
-						if (status > 1) {
-							String uuid = product.getUUID();
-							String name = DB.getDisplayName(uuid);
-							lore.add("owner");
-							lore.add(name);
+						if (status > 0) {
+							lore.add(ChatColor.WHITE + "Status");
+							lore.add(sold);
+							if (status > 1) {
+								UUID uuid = null;
+								String name = "Non Est";
+								OfflinePlayer player = null;
+								try {
+									uuid = UUID.fromString(product.getUUID());
+									player = Bukkit.getOfflinePlayer(uuid);
+									name = player.getName();
+								} catch (Exception e) {
 
-							lore.add(ChatColor.YELLOW + "[SHIFT + LEFT_CLICK]" + ChatColor.WHITE + "BAN TOGGLE");
-							lore.add(ChatColor.YELLOW + "[RIGHT_CLICK]" + ChatColor.WHITE + "ITEM BUY");
-							lore.add(ChatColor.YELLOW + "[SHIFT + RIGHT_CLICK]" + ChatColor.WHITE + "ITEM DROP");
+								}
+								lore.add("owner");
+								lore.add(name);
+
+								lore.add(ChatColor.YELLOW + "[SHIFT + LEFT_CLICK]" + ChatColor.WHITE + "BAN TOGGLE");
+								lore.add(ChatColor.YELLOW + "[RIGHT_CLICK]" + ChatColor.WHITE + "ITEM BUY");
+								lore.add(ChatColor.YELLOW + "[SHIFT + RIGHT_CLICK]" + ChatColor.WHITE + "ITEM DROP");
+							}
 						}
+
+						lore.add(ChatColor.BLACK + "Product ID");
+						lore.add(ChatColor.BLACK + Integer.toString(id));
+
+						ItemStack button = item;
+						meta.setLore(lore);
+						button.setItemMeta(meta);
+
+						inventory.setItem(numb, button);
+					}else {
+						ItemStack item = ItemSerializer.stringToItem(product.getItem());
+						GUIManager.setButton(inventory, item.getType(), item.getType().name(), numb);
 					}
-
-					lore.add(ChatColor.BLACK + "Product ID");
-					lore.add(ChatColor.BLACK + Integer.toString(id));
-
-					ItemStack button = item;
-					meta.setLore(lore);
-					button.setItemMeta(meta);
-
-					inventory.setItem(numb, button);
 
 					numb++;
 				}

@@ -50,7 +50,7 @@ public class InventoryListener implements Listener {
 						SoundManager.clickSound(player);
 
 						// FLAG LISTEN_MAIN
-						if (title.contains("Main"))
+						if (title.contains("Main")) {
 							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 								if (slot == MenuInventory.mainExitSlot) {
 									player.closeInventory();
@@ -65,10 +65,11 @@ public class InventoryListener implements Listener {
 								} else if (slot == MenuInventory.mainManagerSlot) {
 									MenuInventory.onAuctionManager(player, 1);
 								}
-							} ////////////////////// Main ///////////////////////////////////////////
+							}
+						} ////////////////////// Main ///////////////////////////////////////////
 
 						// FLAG LISTEN_SELL
-						if (title.contains("Sell")) {
+						else if (title.contains("Sell")) {
 							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 								if (slot == MenuInventory.sellBackSlot) {
 									MenuInventory.onAuctionMain(player);
@@ -90,10 +91,10 @@ public class InventoryListener implements Listener {
 
 									if (db != null)
 										if (player.getInventory().contains(item)) {
-											
-											if (db.getProductCount(player)<Trade.instance.getConfig().getInt("register_number")
+
+											if (db.getProductCount(player) < Trade.instance.getConfig().getInt("register_number")
 													|| player.hasPermission("auction.manager")) {
-												
+
 												if (db.registItem(player, itemString, price, material) == 1) {
 													player.getInventory().removeItem(item);
 													MenuInventory.onAuctionList(player, 1);
@@ -102,17 +103,17 @@ public class InventoryListener implements Listener {
 													AuctionRecorder.messageAuction(player, "registered", itemString, price);
 
 													SoundManager.successSound(player);
-												}else {
+												} else {
 													AuctionRecorder.messageAuction(player, "Failed", "DB Regist Error.");
 													SoundManager.failedSound(player);
 													player.closeInventory();
 												}
-											}else {
+											} else {
 												AuctionRecorder.messageAuction(player, "Failed", "Excess Registration Count.");
 												SoundManager.failedSound(player);
 												player.closeInventory();
 											}
-										}else {
+										} else {
 											AuctionRecorder.messageAuction(player, "Failed", "Have not this Item.");
 											SoundManager.failedSound(player);
 											player.closeInventory();
@@ -135,7 +136,7 @@ public class InventoryListener implements Listener {
 						} ////////////////////// Sell ////////////////////////////////////////////////////
 
 						// FLAG LISTEN_PRICE
-						if (title.contains("Price")) {
+						else if (title.contains("Price")) {
 							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 								int price = Integer.parseInt(player.getOpenInventory().getTopInventory().getTitle().split(" ")[2]);
 
@@ -170,13 +171,14 @@ public class InventoryListener implements Listener {
 						} ////////////////////// Price ///////////////////////////////////////////////
 
 						// FLAG LISTEN_BUY
-						if (title.contains("Buy")) {
+						else if (title.contains("Buy")) {
 							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 								String pageString = GUIManager.getMenuItem(player, MenuInventory.buyPageSlot).getItemMeta()
 										.getDisplayName();
 								int page = Integer.parseInt(pageString);
-
-								if (!itemListButton(player, slot, page, title, menu.getItem(44))) {// 모든 버튼이 아닌경우 경매장아이템
+								if (slot == MenuInventory.buyFindSlot) {
+									MenuInventory.onAuctionFind(player, 1);
+								} else if (!itemListButton(player, slot, page, title, menu.getItem(44))) {// 모든 버튼이 아닌경우 경매장아이템
 
 									if (db != null) {
 										List<String> lore = currentItem.getItemMeta().getLore();
@@ -197,7 +199,7 @@ public class InventoryListener implements Listener {
 						} ///////////////////////////// BUY //////////////////////////////////////
 
 						// FLAG LISTEN_LIST
-						if (title.contains("List")) {
+						else if (title.contains("List")) {
 							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 								String pageString = GUIManager.getMenuItem(player, MenuInventory.buyPageSlot).getItemMeta()
 										.getDisplayName();
@@ -230,7 +232,7 @@ public class InventoryListener implements Listener {
 						} ////////////////// List/////////////////////
 
 						// FLAG LISTEN_DROP
-						if (title.contains("Drop")) {
+						else if (title.contains("Drop")) {
 							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 								if (slot == MenuInventory.checkBackSlot) {
 									MenuInventory.onAuctionList(player, 1);
@@ -246,7 +248,7 @@ public class InventoryListener implements Listener {
 						} ///////////// Drop///////////////////
 
 						// FLAG LISTEN_MANAGER
-						if (title.contains("Manager")) {
+						else if (title.contains("Manager")) {
 							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
 								String pageString = GUIManager.getMenuItem(player, MenuInventory.buyPageSlot).getItemMeta()
 										.getDisplayName();
@@ -281,7 +283,26 @@ public class InventoryListener implements Listener {
 								}
 
 							}
-						} ////////////// Manager/////////////
+						} ////////////// Find/////////////
+
+						// FLAG LISTEN_FIND
+						else if (title.contains("Find")) {
+							if (e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
+								String pageString = GUIManager.getMenuItem(player, MenuInventory.buyPageSlot).getItemMeta()
+										.getDisplayName();
+								int page = Integer.parseInt(pageString);
+
+								if (!itemListButton(player, slot, page, title, menu.getItem(44))) {
+									if (db != null) {
+										String material = currentItem.getType().name();
+										MenuInventory.onAuctionBuyMaterial(player, page, material);
+									}
+								}
+
+							}
+						} ////////////// Find/////////////
+						
+												
 
 					}
 			}
@@ -348,11 +369,15 @@ public class InventoryListener implements Listener {
 		String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
 		String price = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.WHITE + "Price") + 1));
 		String item = db.selectItem(id);
+		String sellerID = db.getSeller(id);
 
 		if (econ.has(player, Double.parseDouble(price))) {
 			if (db.setStatus(id, 1) == 1) {
-				player.getInventory().addItem(ItemSerializer.stringToItem(item));
+				ItemStack itemStack =ItemSerializer.stringToItem(item);
+				player.getInventory().addItem(itemStack);
 				econ.withdrawPlayer(player, Integer.parseInt(price));
+				
+				db.registRecord(player,sellerID, item, price, itemStack.getType().name());
 
 				AuctionRecorder.recordAuction("BUY", item, player, price);
 				AuctionRecorder.messageAuction(player, "bought", item, price);
@@ -379,6 +404,14 @@ public class InventoryListener implements Listener {
 				MenuInventory.onAuctionList(player, page);
 			else if (title.contains("Manager"))
 				MenuInventory.onAuctionManager(player, page);
+			else if (title.contains("Buy")) {
+				if(!title.contains("-"))
+					MenuInventory.onAuctionBuy(player, page);
+				else {
+					String material = title.split("-")[1].trim();
+					MenuInventory.onAuctionBuyMaterial(player, page,material);
+				}
+			}
 
 		} else if (slot == MenuInventory.buyBackSlot) {
 			MenuInventory.onAuctionMain(player);

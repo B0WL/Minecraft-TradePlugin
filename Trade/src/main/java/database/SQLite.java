@@ -27,16 +27,16 @@ public class SQLite extends Database{
             ",`price` INTEGER NOT NULL"+
             ",`material` TEXT NOT NULL"+
             ");";
-    public String UserTable=
-    		"CREATE TABLE IF NOT EXISTS User ("+    
-    				"`uuid` TEXT NOT NULL PRIMARY KEY"+
-    				",`name` TEXT NOT NULL"+
+    public String RecordTable = 
+    		"CREATE TABLE IF NOT EXISTS Record ("+
+    				"`id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT" +
+    				",`buyer` TEXT NOT NULL"+
+    				",`seller` TEXT NOT NULL"+
+    				",`price` INTEGER NOT NULL"+
+            ",`item` TEXT NOT NULL"+
+            ",`material` TEXT NOT NULL"+
+            ",`trading_time` DATETIME NOT NULL"+
     				");";
-    				
-    
-    
-    
-    
     
     // SQL creation stuff, You can leave the blow stuff untouched.
     public Connection getSQLConnection() {
@@ -69,7 +69,7 @@ public class SQLite extends Database{
             Statement s = connection.createStatement();
 
             s.executeUpdate(ProductTable);
-            s.executeUpdate(UserTable);
+            s.executeUpdate(RecordTable);
             s.close();
         } catch (SQLException e) {
             e.printStackTrace();

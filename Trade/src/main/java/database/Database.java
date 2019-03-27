@@ -46,10 +46,98 @@ public abstract class Database {
 		}
 	}
 	
+	//FLAG QURTY_AVERAGE_FROM_MAT
+	public int getAverageTrading(String material) {
+		String query =  
+		String.format("SELECT AVG(price) FROM Record WHERE material = \"%s\";", material);
+		
+		Connection conn =null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = getSQLConnection();
+			ps = conn.prepareStatement(query);			
+			rs = ps.executeQuery();
+			
+			return rs.getInt("AVG(price)");
+		} catch (SQLException ex) {
+			plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
+		} finally {
+			try {
+				if (ps != null)
+					ps.close();
+				if (conn != null)
+					conn.close();
+			} catch (SQLException ex) {
+				plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
+			}
+		}
+		return 0;
+	}
 	
-	
-	
-	//FLAG QUERY_GET_COUNT
+	//FLAG QUERY_LOWEST_FROM_MAT
+	public int getLowestPrice(String material) {
+		String query =  
+		String.format("SELECT MIN(price) FROM Product WHERE material = \"%s\";", material);
+		
+		Connection conn =null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = getSQLConnection();
+			ps = conn.prepareStatement(query);			
+			rs = ps.executeQuery();
+			
+			return rs.getInt("MIN(price)");
+		} catch (SQLException ex) {
+			plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
+		} finally {
+			try {
+				if (ps != null)
+					ps.close();
+				if (conn != null)
+					conn.close();
+			} catch (SQLException ex) {
+				plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
+			}
+		}
+		return 0;
+	}
+	//FLAG QUERY_GET_COUNT_FROM_MAT
+	public int getProductCountMaterial(String material) {
+		String query =
+						"SELECT COUNT(*) FROM Record WHERE material = ?;";
+		AuctionRecorder.recordAuction("query", query);
+		
+		Connection conn =null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = getSQLConnection();
+			ps = conn.prepareStatement(query);			
+			ps.setString(1, material);
+			rs = ps.executeQuery();
+			
+			return rs.getInt("COUNT(*)");
+		} catch (SQLException ex) {
+			plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
+		} finally {
+			try {
+				if (ps != null)
+					ps.close();
+				if (conn != null)
+					conn.close();
+			} catch (SQLException ex) {
+				plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
+			}
+		}
+		return 0;
+	}
+
+	//FLAG QUERY_GET_COUNT_FROM_PLAYER
 	public int getProductCount(Player player) {
 		String uuid = player.getUniqueId().toString();
 		String query =
@@ -117,8 +205,7 @@ public abstract class Database {
 	//FLAG QUERY_GET_SOLDOUT
 	public int getSoldOut(String uuid) {
 		String query =
-				String.format(
-						"SELECT COUNT(*) FROM Product WHERE uuid = \"%s\" AND status = 1;",uuid);
+						"SELECT COUNT(*) FROM Product WHERE uuid = ? AND status = 1;";
 		AuctionRecorder.recordAuction("query", query);
 		
 		Connection conn =null;
@@ -127,7 +214,8 @@ public abstract class Database {
 		
 		try {
 			conn = getSQLConnection();
-			ps = conn.prepareStatement(query);			
+			ps = conn.prepareStatement(query);
+			ps.setString(1, uuid);
 			rs = ps.executeQuery();
 			
 			return rs.getInt("COUNT(*)");
@@ -421,6 +509,9 @@ public abstract class Database {
 		return queryToProduct(query);
 	}
 	
+
+	
+	
 	//FLAG QUERY_ITEM_BUYLIST_BY_MAT
 	public List<Product> listItemAll(int page, Player user, String material) {
 		int selectColumn=0;
@@ -489,6 +580,36 @@ public abstract class Database {
 			Error.close(plugin, ex);
 		}
 	}// FLAG QUERY___________________________________________
+	
+
+	ResultSet getResultSet(String query) {
+		AuctionRecorder.recordAuction("query", query);
+
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		try {
+			conn = getSQLConnection();
+			ps = conn.prepareStatement(query);
+			rs = ps.executeQuery();
+
+			return rs;
+		} catch (SQLException ex) {
+			plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
+		} finally {
+			try {
+				if (ps != null)
+					ps.close();
+				if (conn != null)
+					conn.close();
+			} catch (SQLException ex) {
+				plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
+			}
+		}
+		return null;
+	}
+	
 	
 	List<Product> queryToProduct(String query) {
 		List<Product> productList = new ArrayList<Product>();

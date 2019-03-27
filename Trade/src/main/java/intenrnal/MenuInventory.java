@@ -31,6 +31,14 @@ public class MenuInventory {
 
 	public static void onAuctionMain(Player player) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Auction : Main");
+		ItemMeta meta = null;
+		ItemStack readMe = new ItemStack(Material.PAPER);
+		meta = readMe.getItemMeta();
+		
+		meta.setDisplayName("READ ME");//TODO READ ME Àû±â
+		
+		readMe.setItemMeta(meta);
+		inventory.setItem(0, readMe);
 
 		GUIManager.setButton(inventory, Material.DIAMOND_BLOCK, ChatColor.GREEN + "Item Buy", mainBuySlot);
 		GUIManager.setButton(inventory, Material.GOLD_BLOCK, ChatColor.YELLOW + "Item Sell", mainSellSlot);
@@ -56,8 +64,8 @@ public class MenuInventory {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Auction : Sell");
 
 		ItemMeta meta = null;
-		meta = new ItemStack(Material.STONE).getItemMeta();
 		ItemStack selectedItem = new ItemStack(Material.CHEST);
+		meta = selectedItem.getItemMeta();
 		if (item != null) {
 			selectedItem = item;
 		} else {
@@ -65,7 +73,11 @@ public class MenuInventory {
 			selectedItem.setItemMeta(meta);
 		}
 		inventory.setItem(sellItemSlot, selectedItem);
+		
+		
+
 		GUIManager.setButton(inventory, Material.GOLD_BLOCK, String.valueOf(price), sellPriceSlot);
+		
 		GUIManager.setButton(inventory, Material.BOOK, ChatColor.GREEN + "Register", sellRegistSlot);
 		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back", sellBackSlot);
 		GUIManager.setButton(inventory, Material.BARRIER, ChatColor.RED + "Exit", sellExitSlot);
@@ -146,7 +158,6 @@ public class MenuInventory {
 
 		player.openInventory(inventory);
 	}
-
 	// FLAG MENU_LIST
 	public static void onAuctionList(Player player, int page) {
 		Database DB = Trade.instance.getRDatabase();
@@ -161,9 +172,7 @@ public class MenuInventory {
 		player.openInventory(inventory);
 
 	}
-
 	// FLAG MENU_MANAGER
-
 	public static void onAuctionManager(Player player, int page) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Manager");
 		Database DB = Trade.instance.getRDatabase();
@@ -172,7 +181,6 @@ public class MenuInventory {
 		itemList(productList, inventory, page, 2, DB);
 		player.openInventory(inventory);
 	}
-
 	// FLAG MENU_FIND
 	public static void onAuctionFind(Player player, int page) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Find");
@@ -182,7 +190,6 @@ public class MenuInventory {
 		itemList(productList, inventory, page, -1, DB);
 		player.openInventory(inventory);
 	}
-	
 	//FLAG MENU_BUY_MAT
 	public static void onAuctionBuyMaterial(Player player, int page, String material) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Buy - "+material);
@@ -194,6 +201,65 @@ public class MenuInventory {
 		GUIManager.setButton(inventory, Material.ENDER_PEARL, "FIND ITEM", buyFindSlot);
 		player.openInventory(inventory);
 	}
+	
+	
+	
+	
+	//FLAG MENU_ITEM_INFO
+	public static int infoMaterialSlot = 11;
+	public static int infoPriceSlot = 12;
+	public static int infoBackSlot = 18;
+	public static int infoExitSlot = 26;
+	
+	
+	public static void onAuctionItemInfo(Player player, Material material) {
+		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Auction : Info - "+material);
+		
+		GUIManager.setButton(inventory, material, material.name(), infoMaterialSlot);
+
+		ItemMeta meta = null;
+		ItemStack selectedItem = new ItemStack(material);
+		meta = selectedItem.getItemMeta();
+		
+		ItemStack priceItem = new ItemStack(Material.BOOK);
+		meta = priceItem.getItemMeta();
+		
+		meta.setDisplayName("Item Trading Info");
+		
+		List<String> lore = new ArrayList<String>();
+		Database DB = Trade.instance.getRDatabase();
+
+		lore.add(ChatColor.GRAY + "-----------------------");
+		
+		lore.add(ChatColor.GOLD+ "Lowest Price");
+		int lowestPrice = 0;
+		lowestPrice = DB.getLowestPrice(selectedItem.getType().name());
+		lore.add(Integer.toString(lowestPrice));
+		
+		lore.add(ChatColor.YELLOW+"Average Trading Price");
+		int averagePrice= 0;
+		averagePrice = DB.getAverageTrading(material.name());
+		lore.add(Integer.toString(averagePrice));
+		
+		lore.add(ChatColor.GOLD+"Trading Amount");
+		int tradingAmount=0;
+		tradingAmount = DB.getProductCountMaterial(material.name());
+		lore.add(Integer.toString(tradingAmount));
+		
+		meta.setLore(lore);
+		priceItem.setItemMeta(meta);
+		
+		inventory.setItem(infoPriceSlot, priceItem);
+
+		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back", infoBackSlot);
+		GUIManager.setButton(inventory, Material.BARRIER, ChatColor.RED + "Exit", infoExitSlot);
+		player.openInventory(inventory);
+	}
+	
+
+	
+	// FLAG MENU________________________________________
+
 	
 	static void itemList(List<Product> productList, Inventory inventory, int page, int status, Database DB) {
 		int numb = 0;
@@ -268,7 +334,7 @@ public class MenuInventory {
 								lore.add(name);
 
 								lore.add(ChatColor.YELLOW + "[SHIFT + LEFT_CLICK]" + ChatColor.WHITE + "BAN TOGGLE");
-								lore.add(ChatColor.YELLOW + "[RIGHT_CLICK]" + ChatColor.WHITE + "ITEM BUY");
+								lore.add(ChatColor.YELLOW + "[LEFT_CLICK]" + ChatColor.WHITE + "ITEM BUY");
 								lore.add(ChatColor.YELLOW + "[SHIFT + RIGHT_CLICK]" + ChatColor.WHITE + "ITEM DROP");
 							}
 						}
@@ -295,4 +361,4 @@ public class MenuInventory {
 		GUIManager.setButton(inventory, Material.BARRIER, ChatColor.RED + "Exit", buyExitSlot);
 	}
 
-}// FLAG MENU________________________________________
+}

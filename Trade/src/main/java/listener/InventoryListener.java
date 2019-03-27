@@ -48,6 +48,11 @@ public class InventoryListener implements Listener {
 						int slot = e.getRawSlot();
 
 						SoundManager.clickSound(player);
+						
+						if(e.isRightClick()) {
+							MenuInventory.onAuctionItemInfo(player, currentItem.getType());
+							return;
+						}
 
 						// FLAG LISTEN_MAIN
 						if (title.contains("Main")) {
@@ -188,7 +193,6 @@ public class InventoryListener implements Listener {
 											SoundManager.successSound(player);
 										} else {
 											SoundManager.failedSound(player);
-											AuctionRecorder.messageAuction(player, "Failed", "Have not enough money.");
 											player.closeInventory();
 										}
 									}
@@ -218,11 +222,13 @@ public class InventoryListener implements Listener {
 											SoundManager.successSound(player);
 
 										} else if (status.contains("Failed")) {
-											this.itemRecall(player, lore);
-
-											MenuInventory.onAuctionList(player, page);
-											SoundManager.failedSound(player);
-											AuctionRecorder.messageAuction(player, "Failed", "Time out.");
+											if(this.itemRecall(player, lore)) {
+												MenuInventory.onAuctionList(player, page);
+												AuctionRecorder.messageAuction(player, "Failed", "Time out.");
+											}else {
+												SoundManager.failedSound(player);
+												player.closeInventory();
+											}
 										} else if (status.contains("On Sale") || status.contains("Waiting")) {// 판매중인것 제거
 											this.itemDropMenu(player, lore, currentItem);
 										}
@@ -239,9 +245,13 @@ public class InventoryListener implements Listener {
 								} else if (slot == MenuInventory.checkDropSlot) {
 									if (db != null) {
 										List<String> lore = menu.getItem(MenuInventory.checkItemSlot).getItemMeta().getLore();
-										this.itemDelete(player, lore);
-
-										MenuInventory.onAuctionList(player, 1);
+										if(this.itemDelete(player, lore)) {
+											MenuInventory.onAuctionList(player, 1);
+											SoundManager.successSound(player);
+										}else {
+											player.closeInventory();
+											SoundManager.failedSound(player);
+										}
 									}
 								}
 							}
@@ -265,18 +275,22 @@ public class InventoryListener implements Listener {
 											}
 
 											if (e.isRightClick()) {
-												this.itemDelete(player, lore);
-												MenuInventory.onAuctionManager(player, page);
+												if (this.itemDelete(player, lore))
+
+													MenuInventory.onAuctionManager(player, page);
+												else
+													player.closeInventory();
 											}
 										} else {
 											if (e.isLeftClick()) {
-											}
-											if (e.isRightClick()) {
 												if (this.itemBuy(player, lore))
 													MenuInventory.onAuctionManager(player, page);
 												else {
 													player.closeInventory();
 												}
+											}
+											if (e.isRightClick()) {
+
 											}
 										}
 									}
@@ -302,8 +316,16 @@ public class InventoryListener implements Listener {
 							}
 						} ////////////// Find/////////////
 						
-												
-
+						else if (title.contains("Info")) {
+							if(e.getClickedInventory().getHolder() instanceof MenuInventoryHolder) {
+								if(slot == MenuInventory.infoBackSlot) {
+									MenuInventory.onAuctionMain(player);
+								}
+								else if (slot == MenuInventory.infoExitSlot) {
+									player.closeInventory();
+								}
+							}
+						}
 					}
 			}
 	}// FLAG LISTEN_____________________________
@@ -322,22 +344,47 @@ public class InventoryListener implements Listener {
 		}
 	}
 
-	void itemDelete(Player player, List<String> lore) {
-		String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
+	boolean itemDelete(Player player, List<String> lore) {
+		int count = 0;
+		for (ItemStack items : player.getInventory().getContents())
+			if (items == null)
+				count++;
+		count -= 5;// armor and offhand
 
-		String item = db.selectItem(id);
-		if (item != null) {
-			db.deleteItem(id);
-			player.getInventory().addItem(ItemSerializer.stringToItem(item));
+		if (count != 0) {
+			String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
+
+			String item = db.selectItem(id);
+			if (item != null) {
+				db.deleteItem(id);
+				player.getInventory().addItem(ItemSerializer.stringToItem(item));
+			}
+			return true;
+		}else {
+			AuctionRecorder.messageAuction(player, "Failed", "Inventory is full");
 		}
+		
+		return false;
 	}
 
-	void itemRecall(Player player, List<String> lore) {
-		String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
-		String item = db.selectItem(id);
-
-		db.deleteItem(id);
-		player.getInventory().addItem(ItemSerializer.stringToItem(item));
+	boolean itemRecall(Player player, List<String> lore) {
+		int count = 0;//TODO 인벤토리 비었는지 체크 함수 필요(장비,방패 인식 안됨)
+		for (ItemStack items : player.getInventory().getContents())
+			if (items == null)
+				count++;
+		count -= 5;// armor and offhand
+		
+		if (count != 0) {
+			String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
+			String item = db.selectItem(id);
+			db.deleteItem(id);
+			player.getInventory().addItem(ItemSerializer.stringToItem(item));
+			
+			return true;
+		}else {
+			AuctionRecorder.messageAuction(player, "Failed", "Inventory is full");
+		}
+		return false;
 	}
 
 	void itemDropMenu(Player player, List<String> lore, ItemStack itemStack) {
@@ -372,22 +419,38 @@ public class InventoryListener implements Listener {
 		String sellerID = db.getSeller(id);
 
 		if (econ.has(player, Double.parseDouble(price))) {
-			if (db.setStatus(id, 1) == 1) {
-				ItemStack itemStack =ItemSerializer.stringToItem(item);
-				player.getInventory().addItem(itemStack);
-				econ.withdrawPlayer(player, Integer.parseInt(price));
-				
-				db.registRecord(player,sellerID, item, price, itemStack.getType().name());
 
-				AuctionRecorder.recordAuction("BUY", item, player, price);
-				AuctionRecorder.messageAuction(player, "bought", item, price);
-				return true;
+			int count = 0;
+			for (ItemStack items : player.getInventory().getContents())
+				if (items == null)
+					count++;
+			count -= 5;// armor and offhand
+
+			if (count != 0) {
+				if (db.setStatus(id, 1) == 1) {
+					ItemStack itemStack = ItemSerializer.stringToItem(item);
+					player.getInventory().addItem(itemStack);
+
+					econ.withdrawPlayer(player, Integer.parseInt(price));
+
+					db.registRecord(player, sellerID, item, price, itemStack.getType().name());
+
+					AuctionRecorder.recordAuction("BUY", item, player, price);
+					AuctionRecorder.messageAuction(player, "bought", item, price);
+
+					return true;
+				} else {
+					AuctionRecorder.messageAuction(player, "Failed", "DB Error.");
+				}
 			} else {
-				return false;
+				AuctionRecorder.messageAuction(player, "Failed", "Inventory is full");
 			}
 		} else {
-			return false;
+			AuctionRecorder.messageAuction(player, "Failed", "Have not enough money.");
 		}
+
+		return false;
+
 	}
 
 	boolean itemListButton(Player player, int slot, int page, String title, ItemStack lastItem) {

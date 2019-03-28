@@ -45,9 +45,10 @@ public abstract class Database {
 			plugin.getLogger().log(Level.SEVERE, "Unable to retreive connection", ex);
 		}
 	}
+
 	
 	//FLAG QURTY_AVERAGE_FROM_MAT
-	public int getAverageTrading(String material) {
+	public Float getAverageTrading(String material) {
 		String query =  
 		String.format("SELECT AVG(price) FROM Record WHERE material = \"%s\";", material);
 		
@@ -60,7 +61,7 @@ public abstract class Database {
 			ps = conn.prepareStatement(query);			
 			rs = ps.executeQuery();
 			
-			return rs.getInt("AVG(price)");
+			return rs.getFloat("AVG(price)");
 		} catch (SQLException ex) {
 			plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
 		} finally {
@@ -73,11 +74,11 @@ public abstract class Database {
 				plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
 			}
 		}
-		return 0;
+		return 0f;
 	}
 	
 	//FLAG QUERY_LOWEST_FROM_MAT
-	public int getLowestPrice(String material) {
+	public Float getLowestPrice(String material) {
 		String query =  
 		String.format("SELECT MIN(price) FROM Product WHERE material = \"%s\";", material);
 		
@@ -90,7 +91,7 @@ public abstract class Database {
 			ps = conn.prepareStatement(query);			
 			rs = ps.executeQuery();
 			
-			return rs.getInt("MIN(price)");
+			return rs.getFloat("MIN(price)");
 		} catch (SQLException ex) {
 			plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
 		} finally {
@@ -103,7 +104,7 @@ public abstract class Database {
 				plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
 			}
 		}
-		return 0;
+		return 0f;
 	}
 	//FLAG QUERY_GET_COUNT_FROM_MAT
 	public int getProductCountMaterial(String material) {
@@ -142,7 +143,7 @@ public abstract class Database {
 		String uuid = player.getUniqueId().toString();
 		String query =
 				String.format(
-						"SELECT COUNT(*) FROM Product WHERE uuid = \"%s\";",uuid);
+						"SELECT COUNT(*) FROM Product WHERE status = 0 AND uuid = \"%s\";",uuid);
 		AuctionRecorder.recordAuction("query", query);
 		
 		Connection conn =null;
@@ -201,6 +202,39 @@ public abstract class Database {
 		}
 		return null;
 	}
+
+	//FLAG QUERY_GET_PRICE
+	public Float getPrice(String productID) {
+		String query =
+						"SELECT price FROM Product WHERE id = ?;";
+		AuctionRecorder.recordAuction("query", query);
+		
+		Connection conn =null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		
+		try {
+			conn = getSQLConnection();
+			ps = conn.prepareStatement(query);			
+			ps.setString(1, productID);
+			rs = ps.executeQuery();
+			
+			
+			return rs.getFloat("price");
+		} catch (SQLException ex) {
+			plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
+		} finally {
+			try {
+				if (ps != null)
+					ps.close();
+				if (conn != null)
+					conn.close();
+			} catch (SQLException ex) {
+				plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
+			}
+		}
+		return null;
+	}
 	
 	//FLAG QUERY_GET_SOLDOUT
 	public int getSoldOut(String uuid) {
@@ -235,9 +269,8 @@ public abstract class Database {
 	}
 	
 	//FLAG QUERY_REGI_RECORD
-	public int registRecord(Player buyer,String sellerID, String item, String price, String material) {
+	public int registRecord(Player buyer,String sellerID, String item, Float eachPrice, String material) {
 		String buyerID = buyer.getUniqueId().toString();
-		int priceInt = Integer.parseInt(price);
 		Date creationDate = new Date();
 		String creationStirng = format.format(creationDate);
 
@@ -254,7 +287,7 @@ public abstract class Database {
 			ps.setString(1, buyerID);
 			ps.setString(2, sellerID);
 			ps.setString(3, item);
-			ps.setInt(4, priceInt);
+			ps.setFloat(4, eachPrice);
 			ps.setString(5, material);
 			ps.setString(6, creationStirng);
 
@@ -277,15 +310,14 @@ public abstract class Database {
 	
 	
 	// FLAG QUERY_REGI_ITEM
-	public int registItem(Player player, String item, String price, String material) {// 1= success 0= fail
-		String playerID = player.getUniqueId().toString();
-		int priceInt = Integer.parseInt(price);
+	public int registItem(String playerID, String item, Float eachPrice, String material, int status) {// 1= success 0= fail
+		
 		Date creationDate = new Date();
 		String creationStirng = format.format(creationDate);
 
 
 		String query = 
-				"INSERT INTO Product (uuid,item,price,material,creation_time) VALUES(?,?,?,?,?)";
+				"INSERT INTO Product (uuid,item,price,material,creation_time,status) VALUES(?,?,?,?,?,?)";
 		AuctionRecorder.recordAuction("query", query);
 
 		Connection conn = null;
@@ -296,9 +328,10 @@ public abstract class Database {
 
 			ps.setString(1, playerID);
 			ps.setString(2, item);
-			ps.setInt(3, priceInt);
+			ps.setFloat(3, eachPrice);
 			ps.setString(4, material);
 			ps.setString(5, creationStirng);
+			ps.setInt(6, status);
 
 			ps.executeUpdate();
 			return 1;
@@ -628,7 +661,7 @@ public abstract class Database {
 				product.setCreation_time(rs.getString("creation_time"));
 				product.setItem(rs.getString("item"));
 				product.setUUID(rs.getString("uuid"));
-				product.setPrice(rs.getInt("price"));
+				product.setPrice(rs.getFloat("price"));
 				product.setStatus(rs.getInt("status"));
 				product.setMaterial(rs.getString("material"));
 				productList.add(product);

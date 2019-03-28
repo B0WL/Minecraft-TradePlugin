@@ -14,7 +14,7 @@ public class AuctionRecorder {
 		System.out.println(record);
 	}
 
-	public static void recordAuction(String reason, String record, Player player, String price) {
+	public static void recordAuction(String reason, String record, Player player, Float price) {
 		System.out.println(title[0] +reason+title[1]);
 		System.out.println(record);
 		System.out.println(player.getDisplayName());
@@ -28,7 +28,7 @@ public class AuctionRecorder {
 		player.sendMessage(message);
 	}
 	
-	public static void messageAuction(Player player, String reason, String itemString, String price) {
+	public static void messageAuction(Player player, String reason, String itemString, Float price) {
 		String name = "";
 		ItemStack item = ItemSerializer.stringToItem(itemString);
 		

@@ -14,10 +14,10 @@ public class Product {
 	public void setCreation_time(String creation_time) {
 		this.creation_time = creation_time;
 	}
-	public int getPrice() {
+	public Float getPrice() {
 		return price;
 	}
-	public void setPrice(int price) {
+	public void setPrice(Float price) {
 		this.price = price;
 	}
 	public String getItem() {
@@ -49,7 +49,7 @@ public class Product {
 	private String creation_time;
 
 	private int status;
-	private int price;
+	private Float price;
 	private String item;
 	private String UUID;
 	

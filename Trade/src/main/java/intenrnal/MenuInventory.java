@@ -34,8 +34,11 @@ public class MenuInventory {
 		ItemMeta meta = null;
 		ItemStack readMe = new ItemStack(Material.PAPER);
 		meta = readMe.getItemMeta();
-		
 		meta.setDisplayName("READ ME");//TODO READ ME Àû±â
+		
+		List<String> lore = new ArrayList<String>();
+		lore.add(ChatColor.YELLOW + "[RIGHT_CLICK]" + ChatColor.WHITE + " ITEM INFO");		
+		meta.setLore(lore);
 		
 		readMe.setItemMeta(meta);
 		inventory.setItem(0, readMe);
@@ -111,11 +114,23 @@ public class MenuInventory {
 	}
 
 	// FLAG MENU_DROP
-	public static int checkItemSlot = 11;
-	public static int checkDropSlot = 15;
+	public static int checkItemSlot = 10;
+
+	public static int checkDownSlot[] = { 12, 13 };
+	public static int checkAmountSlot = 14;
+	public static int checkUpSlot[] = { 16, 15 };
+	
+	public static int checkDropSlot = 26;
 	public static int checkBackSlot = 18;
 
-	public static void onAuctionCheckDrop(Player player, ItemStack item, String price, String id, boolean isDrop) {
+	public static void onAuctionCheckDrop(Player player, ItemStack item) {
+		String statusTitle = "";
+
+		Material confirm = null;
+
+		statusTitle = "Drop";
+		confirm = Material.TNT;
+
 		String name = "";
 
 		if (item.getItemMeta().hasDisplayName())
@@ -123,18 +138,48 @@ public class MenuInventory {
 		else
 			name = item.getType().name();
 
-		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Drop : " + name);
+		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, statusTitle + " : " + name);
 		inventory.setItem(checkItemSlot, item);
 
-		String isDropString = "";
-		if (isDrop) {
-			isDropString = "Drop";
-		} else {
-			isDropString = "Delete";
-		}
+		GUIManager.setButton(inventory, confirm, ChatColor.RED + statusTitle + " this item", checkDropSlot);
+		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back", checkBackSlot);
+		player.openInventory(inventory);
+	}
 
-		GUIManager.setButton(inventory, Material.TNT, ChatColor.RED + isDropString + " this item", checkDropSlot);
+	public static void onAuctionCheckDrop(Player player, ItemStack item, int amount, Float price) {
+		String statusTitle = "";
 
+		Material confirm = null;
+		statusTitle = "Confirm";
+		confirm = Material.SUNFLOWER;
+
+		String name = "";
+
+		if (item.getItemMeta().hasDisplayName())
+			name = item.getItemMeta().getDisplayName();
+		else
+			name = item.getType().name();
+
+		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, 
+				statusTitle + " : " + name + " ["+(price*amount)+"]");
+		
+		inventory.setItem(checkItemSlot, item);
+
+		GUIManager.setButton(inventory, Material.IRON_NUGGET, ChatColor.RED + "Down 1", checkDownSlot[0]);
+		GUIManager.setButton(inventory, Material.IRON_INGOT, ChatColor.RED + "Down 10", checkDownSlot[1]);
+
+		ItemMeta meta = null;
+		ItemStack amountItem = new ItemStack(Material.CHEST);
+		meta = amountItem.getItemMeta();
+		meta.setDisplayName(ChatColor.YELLOW + "Amount");
+		amountItem.setItemMeta(meta);
+		amountItem.setAmount(amount);
+		inventory.setItem(checkAmountSlot, amountItem);
+
+		GUIManager.setButton(inventory, Material.GOLD_INGOT, ChatColor.GREEN + "UP 10", checkUpSlot[1]);
+		GUIManager.setButton(inventory, Material.GOLD_NUGGET, ChatColor.GREEN + "UP 1", checkUpSlot[0]);
+
+		GUIManager.setButton(inventory, confirm, ChatColor.RED + statusTitle + " this item", checkDropSlot);
 		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back", checkBackSlot);
 		player.openInventory(inventory);
 	}
@@ -207,7 +252,7 @@ public class MenuInventory {
 	
 	//FLAG MENU_ITEM_INFO
 	public static int infoMaterialSlot = 11;
-	public static int infoPriceSlot = 12;
+	public static int infoPriceSlot = 15;
 	public static int infoBackSlot = 18;
 	public static int infoExitSlot = 26;
 	
@@ -232,14 +277,14 @@ public class MenuInventory {
 		lore.add(ChatColor.GRAY + "-----------------------");
 		
 		lore.add(ChatColor.GOLD+ "Lowest Price");
-		int lowestPrice = 0;
+		Float lowestPrice = 0f;
 		lowestPrice = DB.getLowestPrice(selectedItem.getType().name());
-		lore.add(Integer.toString(lowestPrice));
+		lore.add(Float.toString(lowestPrice));
 		
 		lore.add(ChatColor.YELLOW+"Average Trading Price");
-		int averagePrice= 0;
+		Float averagePrice= 0f;
 		averagePrice = DB.getAverageTrading(material.name());
-		lore.add(Integer.toString(averagePrice));
+		lore.add(Float.toString(averagePrice));
 		
 		lore.add(ChatColor.GOLD+"Trading Amount");
 		int tradingAmount=0;
@@ -256,6 +301,9 @@ public class MenuInventory {
 		player.openInventory(inventory);
 	}
 	
+	
+	
+	
 
 	
 	// FLAG MENU________________________________________
@@ -269,7 +317,7 @@ public class MenuInventory {
 
 					if (status > -1) {
 						int id = product.getId();
-						int price = product.getPrice();
+						Float price = product.getPrice();
 
 						java.util.Date creation_time = null;
 						try {
@@ -314,7 +362,7 @@ public class MenuInventory {
 						lore.add(ChatColor.WHITE + "Remain Hour");
 						lore.add(ChatColor.YELLOW + String.format("%dH %dM", (int) remain_hour, (int) remain_minute % 60));
 						lore.add(ChatColor.WHITE + "Price");
-						lore.add(ChatColor.YELLOW + Integer.toString(price));
+						lore.add(ChatColor.YELLOW + Float.toString(price));
 
 						if (status > 0) {
 							lore.add(ChatColor.WHITE + "Status");

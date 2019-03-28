@@ -21,10 +21,10 @@ public class SQLite extends Database{
     		"CREATE TABLE IF NOT EXISTS Product (" +
             "`id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT" +
             ",`creation_time` DATETIME NOT NULL"+
-            ",`status` INTEGER DEFAULT 0"+//0 = 판매중/판매실패(기간이 지났을경우) , 1 = 판매완료, 2 = 판매중지
+            ",`status` INTEGER NOT NULL"+//0 = 판매중/판매실패(기간이 지났을경우) , 1 = 판매완료, 2 = 판매중지
             ",`uuid` TEXT NOT NULL"+
             ",`item` TEXT NOT NULL"+
-            ",`price` INTEGER NOT NULL"+
+            ",`price` REAL NOT NULL"+
             ",`material` TEXT NOT NULL"+
             ");";
     public String RecordTable = 
@@ -32,7 +32,7 @@ public class SQLite extends Database{
     				"`id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT" +
     				",`buyer` TEXT NOT NULL"+
     				",`seller` TEXT NOT NULL"+
-    				",`price` INTEGER NOT NULL"+
+    				",`price` REAL NOT NULL"+
             ",`item` TEXT NOT NULL"+
             ",`material` TEXT NOT NULL"+
             ",`trading_time` DATETIME NOT NULL"+

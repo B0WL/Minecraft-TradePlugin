@@ -20,10 +20,7 @@ public class GUIManager {
 	}
 
 	
-	public static ItemStack getMenuItem(Player player, int slot) {
-		ItemStack MenuItem = player.getOpenInventory().getTopInventory().getItem(slot);
-		return MenuItem;
-	}
+
 	
 	
 }

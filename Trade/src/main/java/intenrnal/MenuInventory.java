@@ -1,5 +1,6 @@
 package intenrnal;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,16 +18,18 @@ import org.bukkit.inventory.meta.ItemMeta;
 import database.Database;
 import database.Product;
 import main.Trade;
+import util.AuctionRecorder;
 import util.GUIManager;
 import util.ItemSerializer;
 
 public class MenuInventory {
 
 	// FLAG MENU_MAIN
+	public static int mainReadmeSlot = 0;
+	public static int mainManagerSlot = 1;
 	public static int mainBuySlot = 11;
 	public static int mainSellSlot = 13;
 	public static int mainListSlot = 15;
-	public static int mainManagerSlot = 16;
 	public static int mainExitSlot = 26;
 
 	public static void onAuctionMain(Player player) {
@@ -37,11 +40,11 @@ public class MenuInventory {
 		meta.setDisplayName("READ ME");//TODO READ ME Àû±â
 		
 		List<String> lore = new ArrayList<String>();
-		lore.add(ChatColor.YELLOW + "[RIGHT_CLICK]" + ChatColor.WHITE + " ITEM INFO");		
+		lore.add(ChatColor.YELLOW + "[RIGHT_CLICK]" + ChatColor.WHITE + " ITEM TRADING INFO");		
 		meta.setLore(lore);
 		
 		readMe.setItemMeta(meta);
-		inventory.setItem(0, readMe);
+		inventory.setItem(mainReadmeSlot, readMe);
 
 		GUIManager.setButton(inventory, Material.DIAMOND_BLOCK, ChatColor.GREEN + "Item Buy", mainBuySlot);
 		GUIManager.setButton(inventory, Material.GOLD_BLOCK, ChatColor.YELLOW + "Item Sell", mainSellSlot);
@@ -63,7 +66,7 @@ public class MenuInventory {
 	public static int sellBackSlot = 18;
 	public static int sellExitSlot = 26;
 
-	public static void onAuctionSell(Player player, ItemStack item, int price) {
+	public static void onAuctionSell(Player player, ItemStack item, BigDecimal price , int amount) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Auction : Sell");
 
 		ItemMeta meta = null;
@@ -77,10 +80,16 @@ public class MenuInventory {
 		}
 		inventory.setItem(sellItemSlot, selectedItem);
 		
-		
+		ItemStack priceItem = new ItemStack(Material.GOLD_BLOCK);
+		meta = priceItem.getItemMeta();
+		meta.setDisplayName(String.valueOf(price));
+		List<String> lore = new ArrayList<String>();
+		lore.add(price.multiply(BigDecimal.valueOf(amount)).toString());
+		lore.add(price+" X "+amount);
+		meta.setLore(lore);
+		priceItem.setItemMeta(meta);
+		inventory.setItem(sellPriceSlot, priceItem);
 
-		GUIManager.setButton(inventory, Material.GOLD_BLOCK, String.valueOf(price), sellPriceSlot);
-		
 		GUIManager.setButton(inventory, Material.BOOK, ChatColor.GREEN + "Register", sellRegistSlot);
 		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back", sellBackSlot);
 		GUIManager.setButton(inventory, Material.BARRIER, ChatColor.RED + "Exit", sellExitSlot);
@@ -91,22 +100,35 @@ public class MenuInventory {
 	// FLAG MENU_PRICE
 	public static int priceItemSlot = 13;
 	public static int priceConfirmSlot = 26;
+	
+	public static int priceUnitSlot[] = {4,22};
 
 	public static int priceDownSlot[] = { 10, 11, 12 };
 	public static int priceUpSlot[] = { 16, 15, 14 };
 
-	public static void onAuctionPrice(Player player, int price, ItemStack item) {
+	public static void onAuctionPrice(Player player, BigDecimal price, ItemStack item, BigDecimal priceUnit) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Price : " + String.valueOf(price));
+		BigDecimal hundredD = BigDecimal.TEN.multiply(BigDecimal.TEN);
 
-		GUIManager.setButton(inventory, Material.IRON_NUGGET, ChatColor.RED + "Down 1", priceDownSlot[0]);
-		GUIManager.setButton(inventory, Material.IRON_INGOT, ChatColor.RED + "Down 10", priceDownSlot[1]);
-		GUIManager.setButton(inventory, Material.IRON_BLOCK, ChatColor.RED + "Down 100", priceDownSlot[2]);
+		GUIManager.setButton(inventory, Material.IRON_NUGGET, ChatColor.RED + 
+				"Down " +  (priceUnit).toString(), priceDownSlot[0]);
+		GUIManager.setButton(inventory, Material.IRON_INGOT, ChatColor.RED + 
+				"Down "+ (priceUnit.multiply(BigDecimal.TEN)).toString(), priceDownSlot[1]);
+		GUIManager.setButton(inventory, Material.IRON_BLOCK, ChatColor.RED + 
+				"Down "+(priceUnit.multiply(hundredD)).toString(), priceDownSlot[2]);
 
+		GUIManager.setButton(inventory, Material.GHAST_TEAR, ChatColor.GREEN+"Unit Up", priceUnitSlot[0]);
+		
 		inventory.setItem(priceItemSlot, item);
+		
+		GUIManager.setButton(inventory, Material.GOLD_NUGGET, ChatColor.RED+"Unit Down", priceUnitSlot[1]);
 
-		GUIManager.setButton(inventory, Material.GOLD_BLOCK, ChatColor.GREEN + "UP 100", priceUpSlot[2]);
-		GUIManager.setButton(inventory, Material.GOLD_INGOT, ChatColor.GREEN + "UP 10", priceUpSlot[1]);
-		GUIManager.setButton(inventory, Material.GOLD_NUGGET, ChatColor.GREEN + "UP 1", priceUpSlot[0]);
+		GUIManager.setButton(inventory, Material.GOLD_BLOCK, ChatColor.GREEN + 
+				"UP "+(priceUnit.multiply(hundredD)).toString(), priceUpSlot[2]);
+		GUIManager.setButton(inventory, Material.GOLD_INGOT, ChatColor.GREEN + 
+				"UP "+(priceUnit.multiply(BigDecimal.TEN)).toString(), priceUpSlot[1]);
+		GUIManager.setButton(inventory, Material.GOLD_NUGGET, ChatColor.GREEN + 
+				"UP "+(priceUnit).toString(), priceUpSlot[0]);
 
 		GUIManager.setButton(inventory, Material.SUNFLOWER, ChatColor.GREEN + "Confirm", priceConfirmSlot);
 
@@ -185,24 +207,35 @@ public class MenuInventory {
 	}
 
 	// FLAG MENU_BUY
+	public static int buyBackSlot = 45;
 	public static int buyPageBackSlot = 48;
 	public static int buyPageSlot = 49;
 	public static int buyPageNextSlot = 50;
-	public static int buyBackSlot = 45;
-	public static int buyExitSlot = 53;
-
 	public static int buyFindSlot = 51;
-
+	public static int buyExitSlot = 53;
 	public static void onAuctionBuy(Player player, int page) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Buy");
 		Database DB = Trade.instance.getRDatabase();
 
 		List<Product> productList = DB.listItemAll(page, player);
+		
 		itemList(productList, inventory, page, 0, DB);
 		GUIManager.setButton(inventory, Material.ENDER_PEARL, "FIND ITEM", buyFindSlot);
-
 		player.openInventory(inventory);
 	}
+	
+	//FLAG MENU_BUY_MAT
+	public static void onAuctionBuy(Player player, int page, String material) {
+		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Buy - "+material);
+		Database DB = Trade.instance.getRDatabase();
+
+		List<Product> productList = DB.listItemAll(page, player,material);
+		
+		itemList(productList, inventory, page, 0, DB);
+		GUIManager.setButton(inventory, Material.ENDER_PEARL, "FIND ITEM", buyFindSlot);
+		player.openInventory(inventory);
+	}
+	
 	// FLAG MENU_LIST
 	public static void onAuctionList(Player player, int page) {
 		Database DB = Trade.instance.getRDatabase();
@@ -224,8 +257,22 @@ public class MenuInventory {
 
 		List<Product> productList = DB.listItemAll(page);
 		itemList(productList, inventory, page, 2, DB);
+		GUIManager.setButton(inventory, Material.ENDER_PEARL, "FIND ITEM", buyFindSlot);
+		
 		player.openInventory(inventory);
 	}
+	// FLAG MENU_MANAGER_MAT
+	public static void onAuctionManager(Player player, int page, String material) {
+		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Manager - "+material);
+		Database DB = Trade.instance.getRDatabase();
+
+		List<Product> productList = DB.listItemAll(page, material);
+		itemList(productList, inventory, page, 2, DB);
+		GUIManager.setButton(inventory, Material.ENDER_PEARL, "FIND ITEM", buyFindSlot);
+		
+		player.openInventory(inventory);
+	}
+	
 	// FLAG MENU_FIND
 	public static void onAuctionFind(Player player, int page) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Find");
@@ -234,18 +281,17 @@ public class MenuInventory {
 		List<Product> productList = DB.listItemGroupMaterial(page, player);
 		itemList(productList, inventory, page, -1, DB);
 		player.openInventory(inventory);
-	}
-	//FLAG MENU_BUY_MAT
-	public static void onAuctionBuyMaterial(Player player, int page, String material) {
-		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Buy - "+material);
+	}	
+	// FLAG MENU_FIND_MANAGER
+	public static void onAuctionFindManager(Player player, int page) {
+		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Find - ALL");
 		Database DB = Trade.instance.getRDatabase();
 
-		List<Product> productList = DB.listItemAll(page, player,material);
-		
-		itemList(productList, inventory, page, 0, DB);
-		GUIManager.setButton(inventory, Material.ENDER_PEARL, "FIND ITEM", buyFindSlot);
+		List<Product> productList = DB.listItemGroupMaterial(page);
+		itemList(productList, inventory, page, -1, DB);
 		player.openInventory(inventory);
 	}
+
 	
 	
 	

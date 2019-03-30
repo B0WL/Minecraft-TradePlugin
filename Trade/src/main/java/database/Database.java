@@ -485,6 +485,20 @@ public abstract class Database {
 		
 		return queryToProduct(query);
 	}
+	//FLAG QUERY_ITEM_GROUP_MAT_ALL
+	public List<Product> listItemGroupMaterial(int page){
+		int selectColumn=0;
+		if(page >1)
+			selectColumn = (page-1)*45-1;
+		
+		String query = "SELECT * FROM Product WHERE id"
+				+" NOT IN (SELECT id FROM Product ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
+				+" GROUP BY material;"
+				+" ORDER BY id DESC LIMIT 45";
+		AuctionRecorder.recordAuction("query", query);
+		
+		return queryToProduct(query);
+	}
 	
 
 	//FLAG QUERY_ITEM_MANGERLIST
@@ -577,6 +591,23 @@ public abstract class Database {
 				+" AND material = \""+material+"\""
 				+" AND creation_time BETWEEN "
 				+"\""+format.format(timeBefore.getTime())+"\" AND \""+format.format(timeAfter.getTime())+"\""
+				+" ORDER BY id DESC LIMIT 45;";
+		
+		AuctionRecorder.recordAuction("query", query);
+
+		return queryToProduct(query);
+	}
+	
+	//FLAG QUERY_ITEM_BUYLIST_BY_MAT_ALL
+	public List<Product> listItemAll(int page, String material) {
+		int selectColumn=0;
+		if(page >1)
+			selectColumn = (page-1)*45-1;
+		
+		String query = 
+				"SELECT * FROM Product WHERE id"
+				+" NOT IN (SELECT id FROM Product ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
+				+" AND material = \""+material+"\""
 				+" ORDER BY id DESC LIMIT 45;";
 		
 		AuctionRecorder.recordAuction("query", query);

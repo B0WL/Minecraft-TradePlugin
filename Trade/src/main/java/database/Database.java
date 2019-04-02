@@ -535,7 +535,7 @@ public abstract class Database {
 		
 		Calendar calAfter = Calendar.getInstance();
 		calAfter.setTime(time);
-		calAfter.add(Calendar.MINUTE, +wait);
+		calAfter.add(Calendar.MINUTE, -wait);
 
 		Date timeBefore = calBefore.getTime();
 		Date timeAfter = calAfter.getTime();

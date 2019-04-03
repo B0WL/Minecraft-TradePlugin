@@ -7,8 +7,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import intenrnal.MenuInventory;
 import main.Trade;
+import menu.MenuInventory;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import util.ItemSerializer;
@@ -20,7 +20,7 @@ public class CommandManager implements CommandExecutor {
 		if (sender instanceof Player) {
 			if (label.equalsIgnoreCase("Auction")) {
 				sender.sendMessage("Auction open");
-				MenuInventory.onAuctionMain((Player) sender);
+				MenuInventory.onMain((Player) sender);
 				return true;
 			}
 

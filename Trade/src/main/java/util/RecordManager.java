@@ -3,18 +3,19 @@ package util;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import main.Trade;
 import net.md_5.bungee.api.ChatColor;
 
-public class AuctionRecorder {
+public class RecordManager {
 	
-	static String title[] = {"[Auction: " ,"]"};
+	static String title[] = {"["+Trade.instance.getDescription().getName()+": " ,"]"};
 
-	public static void recordAuction(String reason, String record) {
+	public static void record(String reason, String record) {
 		System.out.println(title[0] +reason+title[1]);
 		System.out.println(record);
 	}
 
-	public static void recordAuction(String reason, String record, Player player, Float price) {
+	public static void record(String reason, String record, Player player, Float price) {
 		System.out.println(title[0] +reason+title[1]);
 		System.out.println(record);
 		System.out.println(player.getDisplayName());
@@ -23,12 +24,12 @@ public class AuctionRecorder {
 		
 	}
 
-	public static void messageAuction(Player player, String reason, String message) {
+	public static void message(Player player, String reason, String message) {
 		player.sendMessage(ChatColor.YELLOW+ title[0] +reason+title[1]);
 		player.sendMessage(message);
 	}
 	
-	public static void messageAuction(Player player, String reason, String itemString, Float price) {
+	public static void message(Player player, String reason, String itemString, Float price) {
 		String name = "";
 		ItemStack item = ItemSerializer.stringToItem(itemString);
 		

@@ -7,9 +7,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import command.CommandManager;
 import database.Database;
 import database.SQLite;
-import intenrnal.MenuInventory;
 import listener.InventoryListener;
 import listener.PlayerListener;
+import menu.MenuInventory;
 import net.milkbowl.vault.economy.Economy;
 
 public class Trade extends JavaPlugin {

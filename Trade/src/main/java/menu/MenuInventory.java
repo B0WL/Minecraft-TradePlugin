@@ -1,4 +1,4 @@
-package intenrnal;
+package menu;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -18,7 +18,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import database.Database;
 import database.Product;
 import main.Trade;
-import util.AuctionRecorder;
+import util.RecordManager;
 import util.GUIManager;
 import util.ItemSerializer;
 
@@ -32,7 +32,7 @@ public class MenuInventory {
 	public static int mainListSlot = 15;
 	public static int mainExitSlot = 26;
 
-	public static void onAuctionMain(Player player) {
+	public static void onMain(Player player) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Auction : Main");
 		ItemMeta meta = null;
 		ItemStack readMe = new ItemStack(Material.PAPER);
@@ -66,7 +66,7 @@ public class MenuInventory {
 	public static int sellBackSlot = 18;
 	public static int sellExitSlot = 26;
 
-	public static void onAuctionSell(Player player, ItemStack item, BigDecimal price , int amount) {
+	public static void onSell(Player player, ItemStack item, BigDecimal price , int amount) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Auction : Sell");
 
 		ItemMeta meta = null;
@@ -106,7 +106,7 @@ public class MenuInventory {
 	public static int priceDownSlot[] = { 10, 11, 12 };
 	public static int priceUpSlot[] = { 16, 15, 14 };
 
-	public static void onAuctionPrice(Player player, BigDecimal price, ItemStack item, BigDecimal priceUnit) {
+	public static void onPrice(Player player, BigDecimal price, ItemStack item, BigDecimal priceUnit) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Price : " + String.valueOf(price));
 		BigDecimal hundredD = BigDecimal.TEN.multiply(BigDecimal.TEN);
 
@@ -145,7 +145,7 @@ public class MenuInventory {
 	public static int checkDropSlot = 26;
 	public static int checkBackSlot = 18;
 
-	public static void onAuctionCheckDrop(Player player, ItemStack item) {
+	public static void onCheckDrop(Player player, ItemStack item) {
 		String statusTitle = "";
 
 		Material confirm = null;
@@ -168,7 +168,7 @@ public class MenuInventory {
 		player.openInventory(inventory);
 	}
 
-	public static void onAuctionCheckDrop(Player player, ItemStack item, int amount, Float price) {
+	public static void onCheckDrop(Player player, ItemStack item, int amount, Float price) {
 		String statusTitle = "";
 
 		Material confirm = null;
@@ -207,37 +207,37 @@ public class MenuInventory {
 	}
 
 	// FLAG MENU_BUY
-	public static int buyBackSlot = 45;
-	public static int buyPageBackSlot = 48;
-	public static int buyPageSlot = 49;
-	public static int buyPageNextSlot = 50;
-	public static int buyFindSlot = 51;
-	public static int buyExitSlot = 53;
-	public static void onAuctionBuy(Player player, int page) {
+	public static int listBackSlot = 45;
+	public static int listPageBackSlot = 48;
+	public static int listPageSlot = 49;
+	public static int listPageNextSlot = 50;
+	public static int listFindSlot = 51;
+	public static int listExitSlot = 53;
+	public static void onBuy(Player player, int page) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Buy");
 		Database DB = Trade.instance.getRDatabase();
 
 		List<Product> productList = DB.listItemAll(page, player);
 		
 		itemList(productList, inventory, page, 0, DB);
-		GUIManager.setButton(inventory, Material.ENDER_PEARL, "FIND ITEM", buyFindSlot);
+		GUIManager.setButton(inventory, Material.ENDER_PEARL, "FIND ITEM", listFindSlot);
 		player.openInventory(inventory);
 	}
 	
 	//FLAG MENU_BUY_MAT
-	public static void onAuctionBuy(Player player, int page, String material) {
+	public static void onBuy(Player player, int page, String material) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Buy - "+material);
 		Database DB = Trade.instance.getRDatabase();
 
 		List<Product> productList = DB.listItemAll(page, player,material);
 		
 		itemList(productList, inventory, page, 0, DB);
-		GUIManager.setButton(inventory, Material.ENDER_PEARL, "FIND ITEM", buyFindSlot);
+		GUIManager.setButton(inventory, Material.ENDER_PEARL, "FIND ITEM", listFindSlot);
 		player.openInventory(inventory);
 	}
 	
 	// FLAG MENU_LIST
-	public static void onAuctionList(Player player, int page) {
+	public static void onList(Player player, int page) {
 		Database DB = Trade.instance.getRDatabase();
 		int regiNumb = Trade.instance.getConfig().getInt("register_number");
 		int haveNumb = DB.getProductCount(player);
@@ -251,30 +251,30 @@ public class MenuInventory {
 
 	}
 	// FLAG MENU_MANAGER
-	public static void onAuctionManager(Player player, int page) {
+	public static void onManager(Player player, int page) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Manager");
 		Database DB = Trade.instance.getRDatabase();
 
 		List<Product> productList = DB.listItemAll(page);
 		itemList(productList, inventory, page, 2, DB);
-		GUIManager.setButton(inventory, Material.ENDER_PEARL, "FIND ITEM", buyFindSlot);
+		GUIManager.setButton(inventory, Material.ENDER_PEARL, "FIND ITEM", listFindSlot);
 		
 		player.openInventory(inventory);
 	}
 	// FLAG MENU_MANAGER_MAT
-	public static void onAuctionManager(Player player, int page, String material) {
+	public static void onManager(Player player, int page, String material) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Manager - "+material);
 		Database DB = Trade.instance.getRDatabase();
 
 		List<Product> productList = DB.listItemAll(page, material);
 		itemList(productList, inventory, page, 2, DB);
-		GUIManager.setButton(inventory, Material.ENDER_PEARL, "FIND ITEM", buyFindSlot);
+		GUIManager.setButton(inventory, Material.ENDER_PEARL, "FIND ITEM", listFindSlot);
 		
 		player.openInventory(inventory);
 	}
 	
 	// FLAG MENU_FIND
-	public static void onAuctionFind(Player player, int page) {
+	public static void onFind(Player player, int page) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Find");
 		Database DB = Trade.instance.getRDatabase();
 
@@ -283,7 +283,7 @@ public class MenuInventory {
 		player.openInventory(inventory);
 	}	
 	// FLAG MENU_FIND_MANAGER
-	public static void onAuctionFindManager(Player player, int page) {
+	public static void onFindManager(Player player, int page) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 54, "Auction : Find - ALL");
 		Database DB = Trade.instance.getRDatabase();
 
@@ -303,7 +303,7 @@ public class MenuInventory {
 	public static int infoExitSlot = 26;
 	
 	
-	public static void onAuctionItemInfo(Player player, Material material) {
+	public static void onItemInfo(Player player, Material material) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(), 27, "Auction : Info - "+material);
 		
 		GUIManager.setButton(inventory, material, material.name(), infoMaterialSlot);
@@ -448,11 +448,11 @@ public class MenuInventory {
 
 					numb++;
 				}
-		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.RED + "Back Page", buyPageBackSlot);
-		GUIManager.setButton(inventory, Material.HEART_OF_THE_SEA, Integer.toString(page), buyPageSlot);
-		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GREEN + "Next Page", buyPageNextSlot);
-		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back", buyBackSlot);
-		GUIManager.setButton(inventory, Material.BARRIER, ChatColor.RED + "Exit", buyExitSlot);
+		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.RED + "Back Page", listPageBackSlot);
+		GUIManager.setButton(inventory, Material.HEART_OF_THE_SEA, Integer.toString(page), listPageSlot);
+		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GREEN + "Next Page", listPageNextSlot);
+		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back", listBackSlot);
+		GUIManager.setButton(inventory, Material.BARRIER, ChatColor.RED + "Exit", listExitSlot);
 	}
 
 }

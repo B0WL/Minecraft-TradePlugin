@@ -26,11 +26,17 @@ public class Product {
 	public void setItem(String item) {
 		this.item = item;
 	}
-	public String getUUID() {
-		return UUID;
+	public String getSeller() {
+		return seller;
 	}
-	public void setUUID(String UUID) {
-		this.UUID = UUID;
+	public void setSeller(String seller) {
+		this.seller = seller;
+	}
+	public String getBuyer() {
+		return buyer;
+	}
+	public void setBuyer(String buyer) {
+		this.buyer = buyer;
 	}
 	public int getStatus() {
 		return status;
@@ -51,7 +57,8 @@ public class Product {
 	private int status;
 	private Float price;
 	private String item;
-	private String UUID;
+	private String seller;
+	private String buyer;
 	
 	private String material;
 }

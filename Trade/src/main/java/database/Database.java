@@ -485,6 +485,7 @@ public abstract class Database {
 		
 		return queryToProduct(query);
 	}
+	
 	//FLAG QUERY_ITEM_GROUP_MAT_ALL
 	public List<Product> listItemGroupMaterial(int page){
 		int selectColumn=0;
@@ -498,6 +499,21 @@ public abstract class Database {
 		RecordManager.record("query", query);
 		
 		return queryToProduct(query);
+	}
+	
+	//FLAG QUERY_TRADING_INFO_ALL
+	public List<Product> listRecordGroupMaterial(int page){
+		int selectColumn=0;
+		if(page >1)
+			selectColumn = (page-1)*45-1;
+		
+		String query = "SELECT * FROM Record WHERE id"
+				+" NOT IN (SELECT id FROM Record ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
+				+" GROUP BY material;"
+				+" ORDER BY id DESC LIMIT 45";
+		RecordManager.record("query", query);
+		
+		return queryToRecord(query);
 	}
 	
 
@@ -633,6 +649,23 @@ public abstract class Database {
 		
 		return queryToProduct(query);
 	}
+	
+	//FLAG QUERY_RECORD_LIST	
+	public List<Product> listRecordALL(int page) {
+	int selectColumn=0;
+	if(page >1)
+		selectColumn = (page-1)*45-1;
+	
+	String query = 
+			"SELECT * FROM Record WHERE id NOT IN"
+			+" (SELECT id FROM Record ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
+			+" ORDER BY id DESC LIMIT 45;";
+
+	RecordManager.record("query", query);
+	
+	return queryToRecord(query);
+}
+
 
 	public void close(PreparedStatement ps, ResultSet rs) {
 		try {
@@ -646,19 +679,29 @@ public abstract class Database {
 	}// FLAG QUERY___________________________________________
 	
 
-	ResultSet getResultSet(String query) {
-		RecordManager.record("query", query);
+	List<Product> queryToRecord(String query) {
+		List<Product> productList = new ArrayList<Product>();
 
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
-
 		try {
 			conn = getSQLConnection();
 			ps = conn.prepareStatement(query);
 			rs = ps.executeQuery();
 
-			return rs;
+			while (rs.next()) {
+				Product product = new Product();
+				product.setId(rs.getInt("id"));
+				product.setCreation_time(rs.getString("trading_time"));
+				product.setItem(rs.getString("item"));
+				product.setSeller(rs.getString("seller"));
+				product.setBuyer(rs.getString("buyer"));
+				product.setPrice(rs.getFloat("price"));
+				product.setMaterial(rs.getString("material"));
+				productList.add(product);
+			}
+			return productList;
 		} catch (SQLException ex) {
 			plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
 		} finally {
@@ -691,7 +734,7 @@ public abstract class Database {
 				product.setId(rs.getInt("id"));
 				product.setCreation_time(rs.getString("creation_time"));
 				product.setItem(rs.getString("item"));
-				product.setUUID(rs.getString("uuid"));
+				product.setSeller(rs.getString("uuid"));
 				product.setPrice(rs.getFloat("price"));
 				product.setStatus(rs.getInt("status"));
 				product.setMaterial(rs.getString("material"));

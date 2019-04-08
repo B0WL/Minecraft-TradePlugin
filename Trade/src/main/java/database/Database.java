@@ -51,6 +51,7 @@ public abstract class Database {
 	public Float getAverageTrading(String material) {
 		String query =  
 		String.format("SELECT AVG(price) FROM Record WHERE material = \"%s\";", material);
+		RecordManager.record("query", query);
 		
 		Connection conn =null;
 		PreparedStatement ps = null;
@@ -81,6 +82,7 @@ public abstract class Database {
 	public Float getLowestPrice(String material) {
 		String query =  
 		String.format("SELECT MIN(price) FROM Product WHERE material = \"%s\";", material);
+		RecordManager.record("query", query);
 		
 		Connection conn =null;
 		PreparedStatement ps = null;

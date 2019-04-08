@@ -21,6 +21,7 @@ import main.Trade;
 import net.milkbowl.vault.economy.Economy;
 import util.GUIManager;
 import util.ItemSerializer;
+import util.RecordManager;
 
 public class MenuInventory {
 
@@ -122,7 +123,8 @@ public class MenuInventory {
 	public static final int priceUpSlot[] = { 16, 15, 14 };
 
 	public static void onPrice(Player player, BigDecimal price, ItemStack item, BigDecimal priceUnit) {
-		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(MenuHolder.PRICE), 27, "Price : " + String.valueOf(price));
+		Inventory inventory = Bukkit.createInventory(
+				new MenuInventoryHolder(MenuHolder.PRICE, price), 27, item.getItemMeta().getDisplayName()+" Price : " + String.valueOf(price));
 		BigDecimal hundredD = BigDecimal.TEN.multiply(BigDecimal.TEN);
 
 		GUIManager.setButton(inventory, Material.IRON_NUGGET, ChatColor.RED + 
@@ -285,6 +287,9 @@ public class MenuInventory {
 		Database DB = Trade.instance.getRDatabase();
 
 		List<Product> productList = DB.listItemAll(page);
+		
+		RecordManager.record("debug", ""+ productList.size());
+		
 		itemList(productList, inventory, page, 2, DB);
 		GUIManager.setButton(inventory, Material.ENDER_PEARL, "FIND ITEM", listFindSlot);
 		
@@ -336,7 +341,7 @@ public class MenuInventory {
 		onRecordList(player, 1);
 	}
 	public static void onRecordList(Player player, int page) {
-		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(MenuHolder.RECORD), 54, "Auction : Record");
+		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(MenuHolder.RECORD), 54, "Auction : Trading Record");
 		Database DB = Trade.instance.getRDatabase();
 
 		List<Product> recordList = DB.listRecordALL(page);
@@ -350,7 +355,8 @@ public class MenuInventory {
 		onMarketPrice(player, 1);
 	}
 	public static void onMarketPrice(Player player, int page) {
-		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(MenuHolder.MARKET_PRICE), 54, "Auction : Market");
+		Inventory inventory = Bukkit.createInventory(
+				new MenuInventoryHolder(MenuHolder.MARKET_PRICE), 54, "Auction : Market Price");
 		Database DB = Trade.instance.getRDatabase();
 
 		List<Product> recordList = DB.listRecordGroupMaterial(page);
@@ -367,9 +373,10 @@ public class MenuInventory {
 	
 	
 	public static void onItemInfo(Player player, Material material) {
-		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(MenuHolder.INFO, material.name()), 27, "Auction : Info - "+material);
+		String materialName = material.name();
+		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(MenuHolder.INFO, material.name()), 27, "Auction : Info - "+materialName);
 		
-		GUIManager.setButton(inventory, material, material.name(), infoMaterialSlot);
+		GUIManager.setButton(inventory, material, materialName, infoMaterialSlot);
 
 		ItemMeta meta = null;
 		ItemStack selectedItem = new ItemStack(material);
@@ -381,23 +388,25 @@ public class MenuInventory {
 		meta.setDisplayName("Item Trading Info");
 		
 		List<String> lore = new ArrayList<String>();
+		
 		Database DB = Trade.instance.getRDatabase();
+		
+		Float lowestPrice = 0f;
+		lowestPrice = DB.getLowestPrice(materialName);
+		Float averagePrice= 0f;
+		averagePrice = DB.getAverageTrading(materialName);
+		int tradingAmount=0;
+		tradingAmount = DB.getProductCountMaterial(materialName);
 
 		lore.add(ChatColor.GRAY + "-----------------------");
 		
 		lore.add(ChatColor.GOLD+ "Lowest Price");
-		Float lowestPrice = 0f;
-		lowestPrice = DB.getLowestPrice(selectedItem.getType().name());
 		lore.add(Float.toString(lowestPrice));
 		
 		lore.add(ChatColor.YELLOW+"Average Trading Price");
-		Float averagePrice= 0f;
-		averagePrice = DB.getAverageTrading(material.name());
 		lore.add(Float.toString(averagePrice));
 		
 		lore.add(ChatColor.GOLD+"Trading Amount");
-		int tradingAmount=0;
-		tradingAmount = DB.getProductCountMaterial(material.name());
 		lore.add(Integer.toString(tradingAmount));
 		
 		meta.setLore(lore);
@@ -414,14 +423,54 @@ public class MenuInventory {
 	
 	
 	// FLAG MENU________________________________________
-
+	
 	static void findList(List<Product> productList, Inventory inventory, int page) {
 		int numb = 0;
 		if (productList != null)
 			if (!productList.isEmpty())
 				for (Product product : productList) {
-					ItemStack item = ItemSerializer.stringToItem(product.getItem());
+					String itemString = product.getItem();
+					ItemStack item = ItemSerializer.stringToItem(itemString);
 					GUIManager.setButton(inventory, item.getType(), item.getType().name(), numb);
+					numb++;
+				}
+
+		listbasicButtons(inventory, page);
+	}
+
+	static void findRecordList(List<Product> productList, Inventory inventory, int page) {
+		int numb = 0;
+		if (productList != null)
+			if (!productList.isEmpty())
+				for (Product product : productList) {
+					String itemString = product.getItem();
+					ItemStack item = ItemSerializer.stringToItem(itemString);
+					ItemMeta meta = item.getItemMeta();
+					List<String> lore = new ArrayList<String>();
+					
+					
+					String materialName = item.getType().name();
+
+					Database DB = Trade.instance.getRDatabase();
+					Float lowestPrice = 0f;
+					lowestPrice = DB.getLowestPrice(materialName);
+					Float averagePrice= 0f;
+					averagePrice = DB.getAverageTrading(materialName);
+					int tradingAmount=0;
+					tradingAmount = DB.getProductCountMaterial(materialName);
+
+					lore.add(ChatColor.GRAY + "-----------------------");
+					lore.add(ChatColor.GOLD+ "Lowest Price");
+					lore.add(Float.toString(lowestPrice));
+					lore.add(ChatColor.YELLOW+"Average Trading Price");
+					lore.add(Float.toString(averagePrice));
+					lore.add(ChatColor.GOLD+"Trading Amount");
+					lore.add(Integer.toString(tradingAmount));
+					
+					
+					meta.setLore(lore);
+					item.setItemMeta(meta);
+					inventory.setItem(numb,item);
 					numb++;
 				}
 
@@ -453,8 +502,10 @@ public class MenuInventory {
 					float remain_second = (period) * 60 * 60 + wait_minute * 60 - (diff / 1000);
 					float remain_minute = (remain_second / 60);
 					float remain_hour = (remain_minute / 60);
-
-					ItemStack item = ItemSerializer.stringToItem(product.getItem());
+					
+					String itemString =product.getItem();
+					ItemStack item = ItemSerializer.stringToItem(itemString);
+					
 					ItemMeta meta = item.getItemMeta();
 					List<String> lore = new ArrayList<String>();
 					String sold = "";
@@ -514,9 +565,9 @@ public class MenuInventory {
 					button.setItemMeta(meta);
 
 					inventory.setItem(numb, button);
+					numb++;
 				}
 
-		numb++;
 
 		listbasicButtons(inventory, page);
 	}
@@ -525,9 +576,9 @@ public class MenuInventory {
 		int numb = 0;
 		if (list != null)
 			if (!list.isEmpty())
-				for (Product record : list) {
+				for (Product product : list) {
 					UUID sellerUUID = null;
-					String sellerStringUUID = record.getSeller();
+					String sellerStringUUID = product.getSeller();
 					String sellerName = "Non Est";
 					OfflinePlayer sellerPlayer = null;
 					try {
@@ -536,7 +587,7 @@ public class MenuInventory {
 						sellerName = sellerPlayer.getName();
 					} catch (Exception e) {
 					}
-					String buyerStringUUID = record.getBuyer();
+					String buyerStringUUID = product.getBuyer();
 					UUID buyerUUID = null;
 					OfflinePlayer buyerPlayer = null;
 					String buyerName = "Non Est";
@@ -547,12 +598,13 @@ public class MenuInventory {
 					} catch (Exception e) {
 
 					}
-					int id = record.getId();
-					Float price = record.getPrice();
-					String time = record.getCreation_time();				
+					int id = product.getId();
+					Float price = product.getPrice();
+					String time = product.getCreation_time();				
 					
-					
-					ItemStack item = ItemSerializer.stringToItem(record.getItem());
+
+					String itemString = product.getItem();
+					ItemStack item = ItemSerializer.stringToItem(itemString);
 					ItemMeta meta = item.getItemMeta();
 					List<String> lore = new ArrayList<String>();
 					if (meta.getLore() != null)

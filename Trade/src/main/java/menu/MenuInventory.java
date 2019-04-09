@@ -46,7 +46,6 @@ public class MenuInventory {
 		meta.setDisplayName("READ ME");//TODO READ ME Àû±â
 		
 		List<String> lore = new ArrayList<String>();
-		lore.add(ChatColor.YELLOW + "[RIGHT_CLICK]" + ChatColor.WHITE + " ITEM TRADING INFO");		
 		meta.setLore(lore);
 		
 		readMe.setItemMeta(meta);
@@ -57,7 +56,7 @@ public class MenuInventory {
 
 		GUIManager.setButton(inventory, Material.DIAMOND_BLOCK, ChatColor.GREEN + "Item Buy", mainBuySlot);
 		GUIManager.setButton(inventory, Material.GOLD_BLOCK, ChatColor.YELLOW + "Item Sell", mainSellSlot);
-		GUIManager.setButton(inventory, Material.GOLD_BLOCK, ChatColor.GOLD + "Market Price", mainPriceSlot);
+		GUIManager.setButton(inventory, Material.SIGN, ChatColor.GOLD + "Market Price", mainPriceSlot);
 		
 		GUIManager.setButton(inventory, Material.BOOK, ChatColor.BLUE + "Trade List", mainListSlot);
 

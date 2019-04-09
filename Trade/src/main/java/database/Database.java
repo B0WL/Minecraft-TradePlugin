@@ -61,7 +61,7 @@ public abstract class Database {
 	public Float getAverageTrading(String material) {
 		String query =  
 		String.format("SELECT AVG(price) FROM Record WHERE material = \"%s\";", material);
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 		
 		Connection conn =null;
 		PreparedStatement ps = null;
@@ -92,7 +92,7 @@ public abstract class Database {
 	public Float getLowestPrice(String material) {
 		String query =  
 		String.format("SELECT MIN(price) FROM Product WHERE material = \"%s\";", material);
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 		
 		Connection conn =null;
 		PreparedStatement ps = null;
@@ -123,7 +123,7 @@ public abstract class Database {
 	public int getProductCountMaterial(String material) {
 		String query =
 						"SELECT COUNT(*) FROM Record WHERE material = ?;";
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 		
 		Connection conn =null;
 		PreparedStatement ps = null;
@@ -157,7 +157,7 @@ public abstract class Database {
 		String query =
 				String.format(
 						"SELECT COUNT(*) FROM Product WHERE status = 0 AND uuid = \"%s\";",uuid);
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 		
 		Connection conn =null;
 		PreparedStatement ps = null;
@@ -188,7 +188,7 @@ public abstract class Database {
 	public String getSeller(String productID) {
 		String query =
 						"SELECT uuid FROM Product WHERE id = ?;";
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 		
 		Connection conn =null;
 		PreparedStatement ps = null;
@@ -221,7 +221,7 @@ public abstract class Database {
 	public Float getPrice(String productID) {
 		String query =
 						"SELECT price FROM Product WHERE id = ?;";
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 		
 		Connection conn =null;
 		PreparedStatement ps = null;
@@ -254,7 +254,7 @@ public abstract class Database {
 	public int getSoldOut(String uuid) {
 		String query =
 						"SELECT COUNT(*) FROM Product WHERE uuid = ? AND status = 1;";
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 		
 		Connection conn =null;
 		PreparedStatement ps = null;
@@ -290,7 +290,7 @@ public abstract class Database {
 
 		String query = 
 				"INSERT INTO Record (buyer,seller,item,price,material,trading_time) VALUES(?,?,?,?,?,?)";
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 
 		Connection conn = null;
 		PreparedStatement ps = null;
@@ -331,7 +331,7 @@ public abstract class Database {
 
 		String query = 
 				"INSERT INTO Product (uuid,item,price,material,creation_time,status) VALUES(?,?,?,?,?,?)";
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 
 		Connection conn = null;
 		PreparedStatement ps = null;
@@ -367,7 +367,7 @@ public abstract class Database {
 	public String selectItem(String id) {
 		String query = 
 				"SELECT item FROM Product WHERE id = ?;";
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 		
 		Connection conn = null;
 		PreparedStatement ps = null;
@@ -401,7 +401,7 @@ public abstract class Database {
 
 		String query = 
 				"UPDATE Product SET status = ? WHERE id = ?;";
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 
 		Connection conn = null;
 		PreparedStatement ps = null;
@@ -435,7 +435,7 @@ public abstract class Database {
 		String query = 
 				"DELETE FROM Product WHERE id = ?;";
 
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 		
 		Connection conn = null;
 		PreparedStatement ps = null;
@@ -494,7 +494,7 @@ public abstract class Database {
 				+"\""+format.format(timeBefore.getTime())+"\" AND \""+format.format(timeAfter.getTime())+"\""
 				+" GROUP BY material;"
 				+" ORDER BY id DESC LIMIT 45";
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 		
 		return queryToProduct(query);
 	}
@@ -509,7 +509,7 @@ public abstract class Database {
 				+" NOT IN (SELECT id FROM Product ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
 				+" GROUP BY material;"
 				+" ORDER BY id DESC LIMIT 45";
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 		
 		return queryToProduct(query);
 	}
@@ -524,7 +524,7 @@ public abstract class Database {
 				+" NOT IN (SELECT id FROM Record ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
 				+" GROUP BY material;"
 				+" ORDER BY id DESC LIMIT 45";
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 		
 		return queryToRecord(query);
 	}
@@ -541,7 +541,7 @@ public abstract class Database {
 				+" (SELECT id FROM Product ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
 				+" ORDER BY id DESC LIMIT 45;";
 
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 
 		return queryToProduct(query);
 	}
@@ -579,7 +579,7 @@ public abstract class Database {
 				+"\""+format.format(timeBefore.getTime())+"\" AND \""+format.format(timeAfter.getTime())+"\""
 				+" ORDER BY id DESC LIMIT 45;";
 		
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 
 		return queryToProduct(query);
 	}
@@ -618,7 +618,7 @@ public abstract class Database {
 				+"\""+format.format(timeBefore.getTime())+"\" AND \""+format.format(timeAfter.getTime())+"\""
 				+" ORDER BY id DESC LIMIT 45;";
 		
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 
 		return queryToProduct(query);
 	}
@@ -635,7 +635,7 @@ public abstract class Database {
 				+" AND material = \""+material+"\""
 				+" ORDER BY id DESC LIMIT 45;";
 		
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 
 		return queryToProduct(query);
 	}
@@ -654,7 +654,7 @@ public abstract class Database {
 				+" AND uuid = \""+ id + "\""
 				+" ORDER BY status DESC LIMIT 45;";
 
-		RecordManager.record("query", query);
+		RecordManager.record("debug", query);
 		
 		return queryToProduct(query);
 	}
@@ -670,7 +670,7 @@ public abstract class Database {
 			+" (SELECT id FROM Record ORDER BY id DESC LIMIT "+ Integer.toString(selectColumn)+")"
 			+" ORDER BY id DESC LIMIT 45;";
 
-	RecordManager.record("query", query);
+	RecordManager.record("debug", query);
 	
 	return queryToRecord(query);
 }

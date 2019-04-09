@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -50,12 +51,13 @@ public class InventoryListener implements Listener {
 
 			while (iterator.hasNext()) {
 				Integer key = iterator.next();
-				if (key < size) {//드래그로 템 뿌리기 방지
+				if (key < size) {// 드래그로 템 뿌리기 방지
 					e.setCancelled(true);
 				}
 			}
 		}
 	}
+
 	@EventHandler
 	public void playerClickPrevent(InventoryClickEvent e) {
 		Inventory clickedInventory = e.getClickedInventory();
@@ -68,8 +70,7 @@ public class InventoryListener implements Listener {
 
 			if (menuHolder instanceof MenuInventoryHolder) {// 플러그인 메뉴임
 
-				if (clickedInventory == topInventory || 
-						(clickedInventory != topInventory && e.isShiftClick())) {// 메뉴를 클릭했다
+				if (clickedInventory == topInventory || (clickedInventory != topInventory && e.isShiftClick())) {// 메뉴를 클릭했다
 					e.setCancelled(true);
 				} // 일단 취소
 			}
@@ -90,24 +91,25 @@ public class InventoryListener implements Listener {
 
 				if (clickedItem.getItemMeta() == null) {// 허공클릭
 				} else if (clickedItem.getItemMeta().getDisplayName() != null) {// 이름있는 아이템클릭
-					SoundManager.clickSound(player);
+					if(clickedInventory == topInventory)
+						SoundManager.clickSound(player);
 
 					int slot = e.getRawSlot();
 					InventoryHolder clickHolder = clickedInventory.getHolder();
 					MenuInventoryHolder myMenuHolder = (MenuInventoryHolder) menuHolder;
-					MenuHolder holder =myMenuHolder.getHolder();
-					
-					if(topInventory.getSize() == 54) {//대형 인벤토리 메뉴, 즉 아이템 리스트 메뉴의 경우
+					MenuHolder holder = myMenuHolder.getHolder();
+
+					if (topInventory.getSize() == 54) {// 대형 인벤토리 메뉴, 즉 아이템 리스트 메뉴의 경우
 						String pageString = topInventory.getItem(MenuInventory.listPageSlot).getItemMeta().getDisplayName();
 						int page = Integer.parseInt(pageString);
-						
-						this.itemListButton(player, slot, page, myMenuHolder, topInventory.getItem(53));
+
+						this.itemListButton(player, slot, page, myMenuHolder, topInventory.getItem(44));
 
 						String material = clickedItem.getType().name();
-						
+
 						if (slot < 45) {// 아이템 리스트의 경우
 							if (db != null) {
-								switch (holder)		{
+								switch (holder) {
 								case BUY:
 								case BUY_MAT:
 									this.listBuyMenu(player, clickedItem);
@@ -115,28 +117,31 @@ public class InventoryListener implements Listener {
 								case BUY_FIND:
 									MenuInventory.onBuy(player, page, material);
 									break;
+
 								case MANAGER:
 								case MANAGER_MAT:
 									this.listManagerMenu(player, clickedItem, page, myMenuHolder, e);
 									break;
+
 								case MANAGER_FIND:
 									MenuInventory.onManager(player, page, material);
-									
+									break;
+
 								case LIST:
 									this.listListMenu(player, clickedItem, page);
 									break;
 
 								case MARKET_PRICE:
+									MenuInventory.onItemInfo(player, clickedItem.getType());
 									break;
 								case RECORD:
 									break;
-									
 								default:
-									break;								
+									break;
 								}
 							}
 						}
-					}///////////////////// 대형 메뉴 /////////////////////////
+					} ///////////////////// 대형 메뉴 /////////////////////////
 					else {// 소형 메뉴
 						switch (holder) {
 						case CONFIRM:
@@ -160,14 +165,14 @@ public class InventoryListener implements Listener {
 						default:
 							break;
 						}
-					}///////////////////소형 메뉴///////////////////////
+					} /////////////////// 소형 메뉴///////////////////////
 
 				}
 			}
 		}
 	}
 
-	///FLAG LISTEN_EVENTS_END
+	/// FLAG LISTEN_EVENTS_END
 
 	private void onMainMenu(Player player, int slot) {
 		if (slot == MenuInventory.mainExitSlot) {
@@ -189,16 +194,16 @@ public class InventoryListener implements Listener {
 		}
 	}
 
-	private void onInfoMenu(Player player , int slot) {
+	private void onInfoMenu(Player player, int slot) {
 		if (slot == MenuInventory.infoBackSlot) {
 			MenuInventory.onMain(player);
 		} else if (slot == MenuInventory.infoExitSlot) {
 			player.closeInventory();
 		}
-		
+
 	}
 
-	private void onDropMenu(Player player, int slot,Inventory topInventory) {
+	private void onDropMenu(Player player, int slot, Inventory topInventory) {
 		if (slot == MenuInventory.checkBackSlot) {
 			MenuInventory.onMain(player);
 		} else if (slot == MenuInventory.checkDropSlot) {
@@ -213,52 +218,52 @@ public class InventoryListener implements Listener {
 				}
 			}
 		}
-		
+
 	}
 
-	private void onConfirmMenu(Player player ,int slot,Inventory topInventory) {
+	private void onConfirmMenu(Player player, int slot, Inventory topInventory) {
 		if (slot == MenuInventory.checkBackSlot) {
-		MenuInventory.onMain(player);
-	} else if (slot == MenuInventory.checkDropSlot) {
-		if (db != null) {
-			ItemStack checkItem = topInventory.getItem(MenuInventory.checkItemSlot);
-			List<String> lore = checkItem.getItemMeta().getLore();
-			ItemStack ammountItem = topInventory.getItem(MenuInventory.checkAmountSlot);
+			MenuInventory.onMain(player);
+		} else if (slot == MenuInventory.checkDropSlot) {
+			if (db != null) {
+				ItemStack checkItem = topInventory.getItem(MenuInventory.checkItemSlot);
+				List<String> lore = checkItem.getItemMeta().getLore();
+				ItemStack ammountItem = topInventory.getItem(MenuInventory.checkAmountSlot);
 
-			int amount = ammountItem.getAmount();
+				int amount = ammountItem.getAmount();
 
-			if (itemBuy(player, lore, amount)) {
-				MenuInventory.onMain(player);
-				SoundManager.successSound(player);
-			} else {
-				SoundManager.failedSound(player);
-				player.closeInventory();
+				if (itemBuy(player, lore, amount)) {
+					MenuInventory.onMain(player);
+					SoundManager.successSound(player);
+				} else {
+					SoundManager.failedSound(player);
+					player.closeInventory();
+				}
+
 			}
+		} else if (slot != MenuInventory.checkAmountSlot && slot != MenuInventory.checkItemSlot) {
+			ItemStack confirmItem = topInventory.getItem(MenuInventory.checkItemSlot);
+			List<String> lore = confirmItem.getItemMeta().getLore();
 
+			int currentAmount = topInventory.getItem(MenuInventory.checkItemSlot).getAmount();
+			int amount = topInventory.getItem(MenuInventory.checkAmountSlot).getAmount();
+			if (slot == MenuInventory.checkUpSlot[0])
+				amount += 1;
+			else if (slot == MenuInventory.checkUpSlot[1])
+				amount += 10;
+			else if (slot == MenuInventory.checkDownSlot[0])
+				amount -= 1;
+			else if (slot == MenuInventory.checkDownSlot[1])
+				amount -= 10;
+
+			if (amount < 1)
+				amount = 1;
+			else if (amount > currentAmount)
+				amount = currentAmount;
+
+			this.itemDropMenu(player, lore, confirmItem, amount);
 		}
-	} else if (slot != MenuInventory.checkAmountSlot && slot != MenuInventory.checkItemSlot) {
-		ItemStack confirmItem = topInventory.getItem(MenuInventory.checkItemSlot);
-		List<String> lore = confirmItem.getItemMeta().getLore();
 
-		int currentAmount = topInventory.getItem(MenuInventory.checkItemSlot).getAmount();
-		int amount = topInventory.getItem(MenuInventory.checkAmountSlot).getAmount();
-		if (slot == MenuInventory.checkUpSlot[0])
-			amount += 1;
-		else if (slot == MenuInventory.checkUpSlot[1])
-			amount += 10;
-		else if (slot == MenuInventory.checkDownSlot[0])
-			amount -= 1;
-		else if (slot == MenuInventory.checkDownSlot[1])
-			amount -= 10;
-
-		if (amount < 1)
-			amount = 1;
-		else if (amount > currentAmount)
-			amount = currentAmount;
-
-		this.itemDropMenu(player, lore, confirmItem, amount);
-	}
-		
 	}
 
 	private void onPriceMenu(Player player, int slot, Inventory topInventory, MenuInventoryHolder myMenuHolder) {
@@ -271,8 +276,7 @@ public class InventoryListener implements Listener {
 			MenuInventory.onSell(player, item, priceD, item.getAmount());
 
 		} else if (slot != MenuInventory.priceItemSlot) {// 확인버튼, 아이템이 아니면 증감버튼
-			String unit = topInventory.getItem(MenuInventory.priceUpSlot[0]).getItemMeta().getDisplayName()
-					.split(" ")[1];
+			String unit = topInventory.getItem(MenuInventory.priceUpSlot[0]).getItemMeta().getDisplayName().split(" ")[1];
 
 			BigDecimal priceUnitD = new BigDecimal(unit);
 			BigDecimal hundredD = BigDecimal.TEN.multiply(BigDecimal.TEN);
@@ -303,10 +307,11 @@ public class InventoryListener implements Listener {
 			MenuInventory.onPrice(player, priceD, topInventory.getItem(MenuInventory.priceItemSlot), priceUnitD);
 
 		}
-		
+
 	}
 
-	private void onSellMenu(Player player, int slot,Inventory topInventory,InventoryHolder clickHolder,ItemStack clickedItem) {
+	private void onSellMenu(Player player, int slot, Inventory topInventory, InventoryHolder clickHolder,
+			ItemStack clickedItem) {
 		if (clickHolder instanceof MenuInventoryHolder) {
 			if (slot == MenuInventory.sellBackSlot) {
 				MenuInventory.onMain(player);
@@ -359,8 +364,7 @@ public class InventoryListener implements Listener {
 			}
 
 			if (slot == MenuInventory.sellPriceSlot) {/// 가격설정버튼, 위치로 보고 찾는다.
-				Float pricef = Float
-						.valueOf(topInventory.getItem(MenuInventory.sellPriceSlot).getItemMeta().getDisplayName());
+				Float pricef = Float.valueOf(topInventory.getItem(MenuInventory.sellPriceSlot).getItemMeta().getDisplayName());
 				BigDecimal priceD = BigDecimal.valueOf(pricef);
 
 				MenuInventory.onPrice(player, priceD, topInventory.getItem(MenuInventory.sellItemSlot), BigDecimal.ONE);
@@ -372,16 +376,16 @@ public class InventoryListener implements Listener {
 					new BigDecimal(topInventory.getItem(MenuInventory.sellPriceSlot).getItemMeta().getDisplayName()),
 					clickedItem.getAmount());
 		}
-		
+
 	}
 
-	//FLAG LISTEN_FUNC_MENU_EVENTS_END
+	// FLAG LISTEN_FUNC_MENU_EVENTS_END
 
 	private void listBuyMenu(Player player, ItemStack clickedItem) {
 		List<String> lore = clickedItem.getItemMeta().getLore();
 		this.itemDropMenu(player, lore, clickedItem, clickedItem.getAmount());
 	}
-	
+
 	private void listListMenu(Player player, ItemStack clickedItem, int page) {
 		List<String> lore = clickedItem.getItemMeta().getLore();
 		String status = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.WHITE + "Status") + 1));
@@ -404,7 +408,8 @@ public class InventoryListener implements Listener {
 		}
 	}
 
-	private void listManagerMenu(Player player, ItemStack clickedItem, int page ,MenuInventoryHolder myMenuHolder, InventoryClickEvent e) {
+	private void listManagerMenu(Player player, ItemStack clickedItem, int page, MenuInventoryHolder myMenuHolder,
+			InventoryClickEvent e) {
 		List<String> lore = clickedItem.getItemMeta().getLore();
 
 		if (e.isShiftClick()) {
@@ -436,8 +441,8 @@ public class InventoryListener implements Listener {
 		}
 	}
 
-	//FLAG LISTEN_FUNC_LIST_MENU_EVENTS_END
-	
+	// FLAG LISTEN_FUNC_LIST_MENU_EVENTS_END
+
 	private void itemToggleBan(Player player, List<String> lore) {
 		String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
 		String item = db.selectItem(id);
@@ -516,8 +521,15 @@ public class InventoryListener implements Listener {
 
 		Float pricef = db.getPrice(id);
 		Float priceWholef = pricef * buyAmount;
+		
+		UUID uuid = null;
+		OfflinePlayer seller = null;
+		try {
+			uuid = UUID.fromString(sellerID);
+			seller = Bukkit.getOfflinePlayer(uuid);
+		} catch (Exception e) {
 
-		Player seller = Bukkit.getPlayer(UUID.fromString(sellerID));
+		}
 
 		if (econ.has(player, priceWholef)) {
 			if (player.getInventory().firstEmpty() != -1) {
@@ -534,8 +546,8 @@ public class InventoryListener implements Listener {
 						RecordManager.message(player, "bought", item, priceWholef);
 
 						if (seller != null) {
-							RecordManager.message(seller, "sold", item, priceWholef);
-							SoundManager.successSound(seller);
+							RecordManager.message((Player)seller, "sold", item, priceWholef);
+							SoundManager.successSound((Player)seller);
 						}
 					} else {
 						RecordManager.message(player, "Failed", "DB Error");
@@ -563,8 +575,8 @@ public class InventoryListener implements Listener {
 						RecordManager.message(player, "bought", buyItemString, priceWholef);
 
 						if (seller != null) {
-							RecordManager.message(seller, "sold", buyItemString, priceWholef);
-							SoundManager.successSound(seller);
+							RecordManager.message((Player)seller, "sold", buyItemString, priceWholef);
+							SoundManager.successSound((Player)seller);
 						}
 
 					} else {
@@ -598,9 +610,10 @@ public class InventoryListener implements Listener {
 		RecordManager.message(player, "sold", item, price * amount);
 	}
 
-	//FLAG LISTEN_FUNC_LIST_BUTTONS
-	
-	private void itemListButton(Player player, int slot, int page, MenuInventoryHolder inventoryHolder, ItemStack lastItem) {
+	// FLAG LISTEN_FUNC_LIST_BUTTONS
+
+	private void itemListButton(Player player, int slot, int page, MenuInventoryHolder inventoryHolder,
+			ItemStack lastItem) {
 		if (slot == MenuInventory.listPageBackSlot || slot == MenuInventory.listPageNextSlot) {
 			if (slot == MenuInventory.listPageBackSlot) {
 				if (page != 1) {
@@ -610,47 +623,50 @@ public class InventoryListener implements Listener {
 				if (lastItem != null)
 					page++;
 			}
-			
-			MenuHolder holder = inventoryHolder.getHolder();
 
+			MenuHolder holder = inventoryHolder.getHolder();
 			if (holder == MenuHolder.LIST) {
 				MenuInventory.onList(player, page);
-			}
-			else if (holder == MenuHolder.MANAGER) {
+			} else if (holder == MenuHolder.MANAGER) {
 				if (holder == MenuHolder.MANAGER_MAT) {
 					String material = inventoryHolder.getMaterial();
 					MenuInventory.onManager(player, page, material);
 				} else {
 					MenuInventory.onManager(player, page);
 				}
-			} 
-			else if (holder == MenuHolder.BUY) {
+			} else if (holder == MenuHolder.BUY) {
 				if (holder == MenuHolder.BUY_MAT) {
 					String material = inventoryHolder.getMaterial();
 					MenuInventory.onBuy(player, page, material);
 				} else {
 					MenuInventory.onBuy(player, page);
 				}
-			}
-			else if (holder == MenuHolder.MARKET_PRICE) {
+			} else if (holder == MenuHolder.MARKET_PRICE) {
 				MenuInventory.onMarketPrice(player, page);
+			} else if (holder == MenuHolder.MANAGER_FIND) {
+				MenuInventory.onFindManager(player, page);
+			} else if (holder == MenuHolder.RECORD) {
+				MenuInventory.onRecordList(player, page);
 			}
-			else if (holder == MenuHolder.MANAGER_FIND) {
-				MenuInventory.onFindManager(player,page);
-			}
-			else if (holder == MenuHolder.RECORD) {
-				MenuInventory.onRecordList(player,page);
-			}
-			
-			
 
+			
+			
 		} else if (slot == MenuInventory.listBackSlot) {
 			MenuInventory.onMain(player);
 		} else if (slot == MenuInventory.listExitSlot) {
 			player.closeInventory();
 		}
+		
+
+		else if (slot == MenuInventory.listFindSlot) {
+			MenuHolder holder = inventoryHolder.getHolder();
+			if(holder == MenuHolder.BUY)
+				MenuInventory.onFind(player);
+			if(holder == MenuHolder.MANAGER)
+				MenuInventory.onFindManager(player);
+		}
 	}
 
 }
 
-//FLAG LISTEN_________________________________________________
+// FLAG LISTEN_________________________________________________

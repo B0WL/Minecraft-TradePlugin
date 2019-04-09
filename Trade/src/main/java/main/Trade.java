@@ -1,6 +1,5 @@
 package main;
 
-
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -16,18 +15,19 @@ public class Trade extends JavaPlugin {
 	public static Trade instance;
 
 	private Database db;
-    private static Economy econ = null;
+	private static Economy econ = null;
 
 	@Override
 	public void onEnable() {
-		instance =this;
+		instance = this;
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		reloadConfig();
-		
-		if(!setupEconomy()) {
-			getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!", getDescription().getName()));
-            getServer().getPluginManager().disablePlugin(this);
+
+		if (!setupEconomy()) {
+			getLogger()
+					.severe(String.format("[%s] - Disabled due to no Vault dependency found!", getDescription().getName()));
+			getServer().getPluginManager().disablePlugin(this);
 			return;
 		}
 		try {
@@ -37,9 +37,7 @@ public class Trade extends JavaPlugin {
 			getLogger().info("Database Load Failed");
 			getServer().getPluginManager().disablePlugin(this);
 		}
-		
-		
-		
+
 		try {
 			// getServer().getPluginManager().registerEvents(new ItemListener(), this);
 			getServer().getPluginManager().registerEvents(new InventoryListener(), this);
@@ -47,14 +45,14 @@ public class Trade extends JavaPlugin {
 			getLogger().info("Inventory Listen Failed");
 			getServer().getPluginManager().disablePlugin(this);
 		}
-		
+
 		try {
 			getServer().getPluginManager().registerEvents(new PlayerListener(), this);
 		} catch (Exception e) {
 			getLogger().info("Player Listen Failed");
 			getServer().getPluginManager().disablePlugin(this);
 		}
-		
+
 		try {
 			this.getCommand("Auction").setExecutor(new CommandManager());
 			this.getCommand("test").setExecutor(new CommandManager());
@@ -70,24 +68,27 @@ public class Trade extends JavaPlugin {
 	public void onDisable() {
 		getLogger().info("Trade onDisable");
 	}
-    private boolean setupEconomy() {
-        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+
+	private boolean setupEconomy() {
+		if (getServer().getPluginManager().getPlugin("Vault") == null) {
 			getLogger().info("Vault Load Failed");
-            return false;
-        }
-        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
-        if (rsp == null) {
-			getLogger().info("rsp Load Failed");			
-            return false;
-        }
-        econ = rsp.getProvider();
-        return econ != null;
-    }
+			return false;
+		}
+		RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+		if (rsp == null) {
+			getLogger().info("rsp Load Failed");
+			return false;
+		}
+		econ = rsp.getProvider();
+		return econ != null;
+	}
+
 	public Database getRDatabase() {
 		return this.db;
 	}
+
 	public Economy getEconomy() {
-        return econ;
-    }
+		return econ;
+	}
 
 }

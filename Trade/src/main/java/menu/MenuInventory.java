@@ -72,7 +72,6 @@ public class MenuInventory {
 	}
 
 	// FLAG MENU_SELL
-
 	public static final int sellItemSlot = 11;
 	public static final int sellPriceSlot = 12;
 	public static final int sellRegistSlot = 15;
@@ -116,9 +115,7 @@ public class MenuInventory {
 	// FLAG MENU_PRICE
 	public static final int priceItemSlot = 13;
 	public static final int priceConfirmSlot = 26;
-	
 	public static final int priceUnitSlot[] = {4,22};
-
 	public static final int priceDownSlot[] = { 10, 11, 12 };
 	public static final int priceUpSlot[] = { 16, 15, 14 };
 
@@ -154,11 +151,9 @@ public class MenuInventory {
 
 	// FLAG MENU_DROP
 	public static final int checkItemSlot = 10;
-
 	public static final int checkDownSlot[] = { 12, 13 };
 	public static final int checkAmountSlot = 14;
 	public static final int checkUpSlot[] = { 16, 15 };
-	
 	public static final int checkDropSlot = 26;
 	public static final int checkBackSlot = 18;
 
@@ -316,7 +311,7 @@ public class MenuInventory {
 		onFind(player, 1);
 	}
 	public static void onFind(Player player, int page) {
-		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(MenuHolder.FIND), 54, "Auction : Find");
+		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(MenuHolder.BUY_FIND), 54, "Auction : Find");
 		Database DB = Trade.instance.getRDatabase();
 
 		List<Product> productList = DB.listItemGroupMaterial(page, player);
@@ -370,7 +365,6 @@ public class MenuInventory {
 	public static final int infoPriceSlot = 15;
 	public static final int infoBackSlot = 18;
 	public static final int infoExitSlot = 26;
-	
 	
 	public static void onItemInfo(Player player, Material material) {
 		String materialName = material.name();
@@ -476,7 +470,6 @@ public class MenuInventory {
 
 		listbasicButtons(inventory, page);
 	}
-
 
 	static void itemList(List<Product> productList, Inventory inventory, int page, int status, Database DB) {/// status 0 = BUY, 1 = LIST, 2 = MANAGER
 		int numb = 0;
@@ -635,7 +628,6 @@ public class MenuInventory {
 		listbasicButtons(inventory, page);
 	}
 	
-	
 	static void listbasicButtons(Inventory inventory, int page) {
 		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.RED + "Back Page", listPageBackSlot);
 		GUIManager.setButton(inventory, Material.HEART_OF_THE_SEA, Integer.toString(page), listPageSlot);
@@ -644,5 +636,4 @@ public class MenuInventory {
 		GUIManager.setButton(inventory, Material.BARRIER, ChatColor.RED + "Exit", listExitSlot);
 	}
 	
-
 }

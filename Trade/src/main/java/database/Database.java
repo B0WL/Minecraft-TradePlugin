@@ -23,8 +23,8 @@ public abstract class Database {
 	Trade plugin;
 	Connection connection;
 	public int tokens = 0;
-
-	public static SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA);
+	
+	public final static SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA);
 
 	public Database(Trade instance) {
 		plugin = instance;
@@ -33,6 +33,17 @@ public abstract class Database {
 	public abstract Connection getSQLConnection();
 
 	public abstract void load();
+	
+	public void close(PreparedStatement ps, ResultSet rs) {
+		try {
+			if (ps != null)
+				ps.close();
+			if (rs != null)
+				rs.close();
+		} catch (SQLException ex) {
+			Error.close(plugin, ex);
+		}
+	}// FLAG QUERY___________________________________________
 
 	public void initialize() {
 		connection = getSQLConnection();
@@ -45,7 +56,6 @@ public abstract class Database {
 			plugin.getLogger().log(Level.SEVERE, "Unable to retreive connection", ex);
 		}
 	}
-
 	
 	//FLAG QURTY_AVERAGE_FROM_MAT
 	public Float getAverageTrading(String material) {
@@ -108,6 +118,7 @@ public abstract class Database {
 		}
 		return 0f;
 	}
+	
 	//FLAG QUERY_GET_COUNT_FROM_MAT
 	public int getProductCountMaterial(String material) {
 		String query =
@@ -172,6 +183,7 @@ public abstract class Database {
 		}
 		return 0;
 	}
+	
 	//FLAG QUERY_GET_SELLER
 	public String getSeller(String productID) {
 		String query =
@@ -309,8 +321,7 @@ public abstract class Database {
 		}
 		return 0;
 	}
-	
-	
+		
 	// FLAG QUERY_REGI_ITEM
 	public int registItem(String playerID, String item, Float eachPrice, String material, int status) {// 1= success 0= fail
 		
@@ -518,7 +529,6 @@ public abstract class Database {
 		return queryToRecord(query);
 	}
 	
-
 	//FLAG QUERY_ITEM_MANGERLIST
 	public List<Product> listItemAll(int page) {
 		int selectColumn=0;
@@ -573,10 +583,7 @@ public abstract class Database {
 
 		return queryToProduct(query);
 	}
-	
-
-	
-	
+		
 	//FLAG QUERY_ITEM_BUYLIST_BY_MAT
 	public List<Product> listItemAll(int page, Player user, String material) {
 		int selectColumn=0;
@@ -667,20 +674,7 @@ public abstract class Database {
 	
 	return queryToRecord(query);
 }
-
-
-	public void close(PreparedStatement ps, ResultSet rs) {
-		try {
-			if (ps != null)
-				ps.close();
-			if (rs != null)
-				rs.close();
-		} catch (SQLException ex) {
-			Error.close(plugin, ex);
-		}
-	}// FLAG QUERY___________________________________________
 	
-
 	List<Product> queryToRecord(String query) {
 		List<Product> productList = new ArrayList<Product>();
 
@@ -718,8 +712,7 @@ public abstract class Database {
 		}
 		return null;
 	}
-	
-	
+		
 	List<Product> queryToProduct(String query) {
 		List<Product> productList = new ArrayList<Product>();
 

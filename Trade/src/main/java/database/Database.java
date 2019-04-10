@@ -217,6 +217,46 @@ public abstract class Database {
 		return null;
 	}
 
+	// FLAG QUERY_GET_PRODUCT
+	public Product getProduct(String productID) {
+		String query = "SELECT * FROM Product WHERE id = ?;";
+		RecordManager.record("debug", query);
+
+		Connection conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+
+		try {
+			conn = getSQLConnection();
+			ps = conn.prepareStatement(query);
+			ps.setString(1, productID);
+			rs = ps.executeQuery();
+
+			Product product = new Product();
+			product.setId(rs.getInt("id"));
+			product.setCreation_time(rs.getString("creation_time"));
+			product.setItem(rs.getString("item"));
+			product.setSeller(rs.getString("uuid"));
+			product.setPrice(rs.getFloat("price"));
+			product.setStatus(rs.getInt("status"));
+			product.setMaterial(rs.getString("material"));
+			
+			return product;
+		} catch (SQLException ex) {
+			plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionExecute(), ex);
+		} finally {
+			try {
+				if (ps != null)
+					ps.close();
+				if (conn != null)
+					conn.close();
+			} catch (SQLException ex) {
+				plugin.getLogger().log(Level.SEVERE, Errors.sqlConnectionClose(), ex);
+			}
+		}
+		return null;
+	}
+
 	//FLAG QUERY_GET_PRICE
 	public Float getPrice(String productID) {
 		String query =
@@ -321,12 +361,16 @@ public abstract class Database {
 		}
 		return 0;
 	}
-		
+
 	// FLAG QUERY_REGI_ITEM
-	public int registItem(String playerID, String item, Float eachPrice, String material, int status) {// 1= success 0= fail
-		
+	public int registItem(String playerID, String item, Float eachPrice, String material, int status) {
 		Date creationDate = new Date();
 		String creationStirng = format.format(creationDate);
+		return this.registItem(playerID, item, eachPrice, material, status, creationStirng);
+	}
+		
+	public int registItem(String playerID, String item, Float eachPrice, String material, int status, String inheritDate) {// 1= success 0= fail
+		
 
 
 		String query = 
@@ -343,7 +387,7 @@ public abstract class Database {
 			ps.setString(2, item);
 			ps.setFloat(3, eachPrice);
 			ps.setString(4, material);
-			ps.setString(5, creationStirng);
+			ps.setString(5, inheritDate);
 			ps.setInt(6, status);
 
 			ps.executeUpdate();

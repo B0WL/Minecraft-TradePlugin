@@ -19,6 +19,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import database.Database;
+import database.Product;
 import main.Trade;
 import menu.MenuHolder;
 import menu.MenuInventory;
@@ -502,10 +503,13 @@ public class InventoryListener implements Listener {
 
 	private void itemDropMenu(Player player, List<String> lore, ItemStack itemStack, int count) {
 		String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
-		String item = db.selectItem(id);
-		Float price = db.getPrice(id);
+		Product product = db.getProduct(id);
+
+		String item = product.getItem();
+		Float pricef = product.getPrice();
+		
 		if (item != null) {
-			MenuInventory.onCheck(player, itemStack, count, price);
+			MenuInventory.onCheck(player, itemStack, count, pricef);
 		} else {
 			SoundManager.failedSound(player);
 			RecordManager.message(player, "Failed", "It does not exist.");
@@ -515,11 +519,13 @@ public class InventoryListener implements Listener {
 
 	private boolean itemBuy(Player player, List<String> lore, int buyAmount) {
 		String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
+		
+		Product product = db.getProduct(id);
 
-		String item = db.selectItem(id);
-		String sellerID = db.getSeller(id);
-
-		Float pricef = db.getPrice(id);
+		String item = product.getItem();
+		String sellerID = product.getSeller();
+		Float pricef = product.getPrice();
+		
 		Float priceWholef = pricef * buyAmount;
 		
 		UUID uuid = null;
@@ -565,8 +571,10 @@ public class InventoryListener implements Listener {
 						remainItem.setAmount(remainAmount);
 						String remainItemString = ItemSerializer.itemToString(remainItem);
 
-						db.registItem(sellerID, remainItemString, pricef, material, 0);
-						db.registItem(sellerID, buyItemString, pricef, material, 1);
+						String time = product.getCreation_time();
+
+						db.registItem(sellerID, remainItemString, pricef, material, 0,time);
+						db.registItem(sellerID, buyItemString, pricef, material, 1,time);
 
 						player.getInventory().addItem(buyItem);
 
@@ -600,14 +608,18 @@ public class InventoryListener implements Listener {
 
 	private void itemSaleSuccess(Player player, List<String> lore, int amount) {
 		String id = ChatColor.stripColor(lore.get(lore.indexOf(ChatColor.BLACK + "Product ID") + 1));
-		Float price = db.getPrice(id);
-		String item = db.selectItem(id);
+		
+		Product product = db.getProduct(id);
+
+		String item = product.getItem();
+		Float pricef = product.getPrice();
+		
 
 		db.deleteItem(id);
-		econ.depositPlayer(player, price * amount);
+		econ.depositPlayer(player, pricef * amount);
 
-		RecordManager.record("SELL", item, player, price * amount);
-		RecordManager.message(player, "sold", item, price * amount);
+		RecordManager.record("SELL", item, player, pricef * amount);
+		RecordManager.message(player, "sold", item, pricef * amount);
 	}
 
 	// FLAG LISTEN_FUNC_LIST_BUTTONS

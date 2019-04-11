@@ -6,3 +6,5 @@ regist_period: 72
 wait_time: 30
 #등록 수
 register_number: 10
+#디버그 모드
+debug: false

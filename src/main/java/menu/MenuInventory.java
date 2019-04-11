@@ -43,7 +43,7 @@ public class MenuInventory {
 		ItemMeta meta = null;
 		ItemStack readMe = new ItemStack(Material.PAPER);
 		meta = readMe.getItemMeta();
-		meta.setDisplayName("READ ME");//TODO READ ME 적기
+		meta.setDisplayName("Trade - Auction");//TODO READ ME 적기
 		
 		List<String> lore = new ArrayList<String>();
 		meta.setLore(lore);
@@ -65,7 +65,7 @@ public class MenuInventory {
 			GUIManager.setButton(inventory, Material.BOOKSHELF, ChatColor.WHITE + "Record", mainRecordSlot);
 		}
 
-		GUIManager.setButton(inventory, Material.BARRIER, ChatColor.RED + "Exit", mainExitSlot);
+		GUIManager.setButton(inventory, Material.TNT, ChatColor.RED + "Exit", mainExitSlot);
 
 		player.openInventory(inventory);
 	}
@@ -106,7 +106,7 @@ public class MenuInventory {
 
 		GUIManager.setButton(inventory, Material.BOOK, ChatColor.GREEN + "Register", sellRegistSlot);
 		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back", sellBackSlot);
-		GUIManager.setButton(inventory, Material.BARRIER, ChatColor.RED + "Exit", sellExitSlot);
+		GUIManager.setButton(inventory, Material.TNT, ChatColor.RED + "Exit", sellExitSlot);
 		player.openInventory(inventory);
 
 	}
@@ -143,7 +143,7 @@ public class MenuInventory {
 		GUIManager.setButton(inventory, Material.GOLD_NUGGET, ChatColor.GREEN + 
 				"UP "+(priceUnit).toString(), priceUpSlot[0]);
 
-		GUIManager.setButton(inventory, Material.SUNFLOWER, ChatColor.GREEN + "Confirm", priceConfirmSlot);
+		GUIManager.setButton(inventory, Material.GOLDEN_APPLE, ChatColor.GREEN + "Confirm", priceConfirmSlot);
 
 		player.openInventory(inventory);
 	}
@@ -184,7 +184,7 @@ public class MenuInventory {
 
 		Material confirm = null;
 		statusTitle = "Confirm";
-		confirm = Material.SUNFLOWER;
+		confirm = Material.GOLDEN_APPLE;
 
 		String name = "";
 
@@ -408,7 +408,7 @@ public class MenuInventory {
 		inventory.setItem(infoPriceSlot, priceItem);
 
 		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back",  infoBackSlot);
-		GUIManager.setButton(inventory, Material.BARRIER, ChatColor.RED + "Exit", infoExitSlot);
+		GUIManager.setButton(inventory, Material.TNT, ChatColor.RED + "Exit", infoExitSlot);
 		player.openInventory(inventory);
 	}
 	
@@ -629,10 +629,10 @@ public class MenuInventory {
 	
 	static void listbasicButtons(Inventory inventory, int page) {
 		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.RED + "Back Page", listPageBackSlot);
-		GUIManager.setButton(inventory, Material.HEART_OF_THE_SEA, Integer.toString(page), listPageSlot);
+		GUIManager.setButton(inventory, Material.EGG, Integer.toString(page), listPageSlot);
 		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GREEN + "Next Page", listPageNextSlot);
 		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back", listBackSlot);
-		GUIManager.setButton(inventory, Material.BARRIER, ChatColor.RED + "Exit", listExitSlot);
+		GUIManager.setButton(inventory, Material.TNT, ChatColor.RED + "Exit", listExitSlot);
 	}
 	
 }

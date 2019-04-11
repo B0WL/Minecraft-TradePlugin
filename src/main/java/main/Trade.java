@@ -2,13 +2,13 @@ package main;
 
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.mineacademy.remain.Remain;
 
 import command.CommandManager;
 import database.Database;
 import database.SQLite;
 import listener.InventoryListener;
 import listener.PlayerListener;
-import menu.MenuInventory;
 import net.milkbowl.vault.economy.Economy;
 
 public class Trade extends JavaPlugin {
@@ -20,9 +20,13 @@ public class Trade extends JavaPlugin {
 	@Override
 	public void onEnable() {
 		instance = this;
+		Remain.setPlugin(this);		
+		
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		reloadConfig();
+
+
 
 		if (!setupEconomy()) {
 			getLogger()

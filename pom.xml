@@ -6,9 +6,6 @@
 	<artifactId>Trade</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
-
-
-
 	<build>
 		<plugins>
 			<plugin>
@@ -19,10 +16,33 @@
 					<target>1.8</target>
 				</configuration>
 			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.1.1</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<createDependencyReducedPom>false</createDependencyReducedPom>
+					<!-- If you already use a shade plugin only use the following code and 
+						paste it into it -->
+					<relocations>
+						<relocation>
+							<pattern>org.mineacademy.remain</pattern>
+							<shadedPattern>you.yourplugin.remain</shadedPattern>
+						</relocation>
+					</relocations>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
-
-
 
 	<repositories>
 		<repository>
@@ -34,12 +54,12 @@
 			<id>vault-repo</id>
 			<url>http://nexus.hc.to/content/repositories/pub_releases</url>
 		</repository>
+
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
 	</repositories>
-
-
-
-
-
 
 	<dependencies>
 		<dependency>
@@ -49,7 +69,6 @@
 			<scope>provided</scope>
 		</dependency>
 
-
 		<!--Spigot API -->
 		<!--You only need one of the two, don't put both. Spigot is recommended. -->
 		<dependency>
@@ -58,6 +77,7 @@
 			<version>1.13.2-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
+
 		<!--Bukkit API -->
 		<!--You only need one of the two, don't put both. Spigot is recommended. -->
 		<dependency>
@@ -73,7 +93,6 @@
 			<version>3.7.2</version>
 		</dependency>
 
-
 		<dependency>
 			<groupId>net.milkbowl.vault</groupId>
 			<artifactId>VaultAPI</artifactId>
@@ -81,12 +100,11 @@
 			<scope>provided</scope>
 		</dependency>
 
-
-
+		<dependency>
+			<groupId>com.github.kangarko</groupId>
+			<artifactId>Remain</artifactId>
+			<version>3.0.1</version> <!-- change to the latest version -->
+			<scope>compile</scope>
+		</dependency>
 	</dependencies>
-
-
-
-
-
 </project>

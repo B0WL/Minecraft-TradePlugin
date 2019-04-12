@@ -106,7 +106,7 @@ public class MenuInventory {
 		priceItem.setItemMeta(priceMeta);
 		inventory.setItem(sellPriceSlot, priceItem);
 
-		ItemStack infoItem = new ItemStack(Material.BOOK);
+		ItemStack infoItem = new ItemStack(Material.SIGN);
 		ItemMeta infoMeta = infoItem.getItemMeta();
 		infoMeta = infoItem.getItemMeta();
 		infoMeta.setDisplayName("Item Trading Info");

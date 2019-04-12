@@ -14,8 +14,8 @@ public class RecordManager {
 	static final String title = "["+Trade.instance.getDescription().getName()+"] - ";
 
 	public static void record(String reason, String record) {
-		if (Trade.instance.getConfig().getBoolean("debug"))
-			if (reason == "debug")
+		if (!Trade.instance.getConfig().getBoolean("debug"))
+			if (reason.contains("debug"))
 				return;
 
 		Logger logeer = Trade.instance.getLogger();
@@ -27,8 +27,8 @@ public class RecordManager {
 	}
 
 	public static void record(String reason, String record, Player player, Float price) {
-		if (Trade.instance.getConfig().getBoolean("debug"))
-			if (reason == "debug")
+		if (!Trade.instance.getConfig().getBoolean("debug"))
+			if (reason.contains("debug"))
 				return;
 
 		Logger logeer = Trade.instance.getLogger();

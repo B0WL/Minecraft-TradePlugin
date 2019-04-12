@@ -73,6 +73,7 @@ public class MenuInventory {
 	// FLAG MENU_SELL
 	public static final int sellItemSlot = 11;
 	public static final int sellPriceSlot = 12;
+	public static final int sellInfoSlot = 13;
 	public static final int sellRegistSlot = 15;
 	public static final int sellBackSlot = 18;
 	public static final int sellExitSlot = 26;
@@ -83,26 +84,52 @@ public class MenuInventory {
 	public static void onSell(Player player, ItemStack item, BigDecimal price , int amount) {
 		Inventory inventory = Bukkit.createInventory(new MenuInventoryHolder(MenuHolder.SELL), 27, "Auction : Sell");
 
-		ItemMeta meta = null;
+		ItemMeta selectedMeta = null;
 		ItemStack selectedItem = new ItemStack(Material.CHEST);
-		meta = selectedItem.getItemMeta();
+		selectedMeta = selectedItem.getItemMeta();
 		if (item != null) {
 			selectedItem = item;
 		} else {
-			meta.setDisplayName(ChatColor.GRAY + "Item Select");
-			selectedItem.setItemMeta(meta);
+			selectedMeta.setDisplayName(ChatColor.GRAY + "Item Select");
+			selectedItem.setItemMeta(selectedMeta);
 		}
 		inventory.setItem(sellItemSlot, selectedItem);
-		
+				
 		ItemStack priceItem = new ItemStack(Material.GOLD_BLOCK);
-		meta = priceItem.getItemMeta();
-		meta.setDisplayName(String.valueOf(price));
+		ItemMeta priceMeta = null;
+		priceMeta = priceItem.getItemMeta();
+		priceMeta.setDisplayName(String.valueOf(price));
 		List<String> lore = new ArrayList<String>();
 		lore.add(price.multiply(BigDecimal.valueOf(amount)).toString());
 		lore.add(price+" X "+amount);
-		meta.setLore(lore);
-		priceItem.setItemMeta(meta);
+		priceMeta.setLore(lore);
+		priceItem.setItemMeta(priceMeta);
 		inventory.setItem(sellPriceSlot, priceItem);
+
+		ItemStack infoItem = new ItemStack(Material.BOOK);
+		ItemMeta infoMeta = infoItem.getItemMeta();
+		infoMeta = infoItem.getItemMeta();
+		infoMeta.setDisplayName("Item Trading Info");
+		List<String> infoLore = new ArrayList<String>();
+		Database DB = Trade.instance.getRDatabase();
+		Material material = selectedItem.getType();
+		String materialName = material.name();		
+		Float lowestPrice = 0f;
+		lowestPrice = DB.getLowestPrice(materialName);
+		Float averagePrice= 0f;
+		averagePrice = DB.getAverageTrading(materialName);
+		int tradingAmount=0;
+		tradingAmount = DB.getProductCountMaterial(materialName);
+		infoLore.add(ChatColor.GRAY + "-----------------------");
+		infoLore.add(ChatColor.GOLD+ "Lowest Price");
+		infoLore.add(Float.toString(lowestPrice));
+		infoLore.add(ChatColor.YELLOW+"Average Trading Price");
+		infoLore.add(Float.toString(averagePrice));
+		infoLore.add(ChatColor.GOLD+"Trading Amount");
+		infoLore.add(Integer.toString(tradingAmount));
+		infoMeta.setLore(infoLore);
+		infoItem.setItemMeta(infoMeta);
+		inventory.setItem(sellInfoSlot, infoItem);
 
 		GUIManager.setButton(inventory, Material.BOOK, ChatColor.GREEN + "Register", sellRegistSlot);
 		GUIManager.setButton(inventory, Material.SLIME_BALL, ChatColor.GRAY + "Back", sellBackSlot);

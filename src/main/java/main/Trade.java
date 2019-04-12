@@ -8,7 +8,6 @@ import database.Database;
 import database.SQLite;
 import listener.InventoryListener;
 import listener.PlayerListener;
-import menu.MenuInventory;
 import net.milkbowl.vault.economy.Economy;
 
 public class Trade extends JavaPlugin {
@@ -20,6 +19,7 @@ public class Trade extends JavaPlugin {
 	@Override
 	public void onEnable() {
 		instance = this;
+
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		reloadConfig();

@@ -14,9 +14,10 @@ public class RecordManager {
 	static final String title = "["+Trade.instance.getDescription().getName()+"] - ";
 
 	public static void record(String reason, String record) {
-		if(reason == "debug")
-			return;
-		
+		if (Trade.instance.getConfig().getBoolean("debug"))
+			if (reason == "debug")
+				return;
+
 		Logger logeer = Trade.instance.getLogger();
 		String log = 
 				String.format("- %s", reason) 
@@ -26,9 +27,10 @@ public class RecordManager {
 	}
 
 	public static void record(String reason, String record, Player player, Float price) {
-		if(reason == "debug")
-			return;
-		
+		if (Trade.instance.getConfig().getBoolean("debug"))
+			if (reason == "debug")
+				return;
+
 		Logger logeer = Trade.instance.getLogger();
 		String log = 
 				String.format("- %s", reason) 

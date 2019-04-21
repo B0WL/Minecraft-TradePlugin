@@ -5,20 +5,22 @@ import java.util.logging.Logger;
 
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import main.Trade;
 import net.md_5.bungee.api.ChatColor;
 
 public class RecordManager {
+	static JavaPlugin plugin = Trade.instance;
 	
-	static final String title = "["+Trade.instance.getDescription().getName()+"] - ";
+	static final String title = "["+plugin.getDescription().getName()+"] - ";
 
 	public static void record(String reason, String record) {
-		if (!Trade.instance.getConfig().getBoolean("debug"))
+		if (!plugin.getConfig().getBoolean("debug"))
 			if (reason.contains("debug"))
 				return;
 
-		Logger logeer = Trade.instance.getLogger();
+		Logger logeer = plugin.getLogger();
 		String log = 
 				String.format("- %s", reason) 
 				+ "\r\n" + record;
@@ -27,11 +29,11 @@ public class RecordManager {
 	}
 
 	public static void record(String reason, String record, Player player, Float price) {
-		if (!Trade.instance.getConfig().getBoolean("debug"))
+		if (!plugin.getConfig().getBoolean("debug"))
 			if (reason.contains("debug"))
 				return;
 
-		Logger logeer = Trade.instance.getLogger();
+		Logger logeer = plugin.getLogger();
 		String log = 
 				String.format("- %s", reason) 
 				+ "\r\n" + record

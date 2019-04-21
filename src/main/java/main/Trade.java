@@ -3,9 +3,9 @@ package main;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import command.CommandManager;
 import database.Database;
 import database.SQLite;
+import listener.CommandListener;
 import listener.InventoryListener;
 import listener.PlayerListener;
 import net.milkbowl.vault.economy.Economy;
@@ -54,8 +54,8 @@ public class Trade extends JavaPlugin {
 		}
 
 		try {
-			this.getCommand("Auction").setExecutor(new CommandManager());
-			this.getCommand("test").setExecutor(new CommandManager());
+			this.getCommand("Auction").setExecutor(new CommandListener());
+			this.getCommand("test").setExecutor(new CommandListener());
 		} catch (Exception e) {
 			getLogger().info("Command Listen Failed");
 			getServer().getPluginManager().disablePlugin(this);

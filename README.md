@@ -21,6 +21,4 @@ Tested Minecraft Versions: 1.13
 
 ![unknown (2)](./src/main/resources/readme/unknown (2).png)
 
-![unknown (1)](./src/main/resources/readme/unknown (1).png)
-
 ![unknown](./src/main/resources/readme/unknown.png)

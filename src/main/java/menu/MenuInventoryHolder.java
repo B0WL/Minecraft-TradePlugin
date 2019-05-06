@@ -25,7 +25,7 @@ public class MenuInventoryHolder implements InventoryHolder {
 		this.price = price;
 	}
 	
-	
+
 	public boolean holderIs(MenuHolder holder) {
 		if(holder == this.holder) {
 			return true;
